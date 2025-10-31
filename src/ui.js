@@ -34,6 +34,12 @@ const icon = (name, classes = '') => {
       return `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"/><path d="M10 11v6M14 11v6" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"/><path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>`;
     case 'user':
       return `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5z" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M4 21a8 8 0 0 1 16 0" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"/></svg>`;
+    case 'check-circle':
+      return `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M9 12l2 2 4-4" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/></svg>`;
+    case 'alert-triangle':
+      return `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5"/><path d="M12 9v4" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"/><circle cx="12" cy="16" r="1" fill="currentColor"/></svg>`;
+    case 'info-circle':
+      return `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M11.5 11.5h1v4" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"/><circle cx="12" cy="8" r="0.75" fill="currentColor"/></svg>`;
     default:
       return '';
   }
@@ -48,6 +54,11 @@ const createChatMessageEntry = (author, role, message) => ({
   role,
   message,
 });
+const TOAST_TONES = {
+  success: { icon: 'check-circle', ariaLive: 'polite' },
+  error: { icon: 'alert-triangle', ariaLive: 'assertive' },
+  info: { icon: 'info-circle', ariaLive: 'polite' },
+};
 
 const TAB_CONFIG = [
   { id: 'dados', label: 'Dados', icon: 'dados' },
@@ -564,15 +575,25 @@ const renderAjuda = (state) => {
   `;
 };
 
-const renderToastContainer = (state) => `
-  <div class="pointer-events-none fixed inset-x-4 bottom-4 z-50 flex flex-col items-center space-y-2 sm:items-end sm:space-y-3" data-toast-container>
+const renderToastContainer = (state) => {
+  const toast = state.toast;
+  const toneKey = toast?.tone && TOAST_TONES[toast.tone] ? toast.tone : 'info';
+  const tone = TOAST_TONES[toneKey];
+  const toneClass = `toast--${toneKey}`;
+
+  return `
+  <div class="pointer-events-none fixed inset-x-4 bottom-4 z-50 flex flex-col items-center space-y-2 sm:items-end sm:space-y-3" data-toast-container aria-atomic="true">
     ${
-      state.toast
-        ? `<div class="toast pointer-events-auto px-4 py-3 text-sm text-text">${state.toast.message}</div>`
+      toast
+        ? `<div class="toast ${toneClass} pointer-events-auto fade-in-up" role="status" aria-live="${tone.ariaLive}">
+            <span class="toast__icon">${icon(tone.icon)}</span>
+            <span class="toast__content">${toast.message}</span>
+          </div>`
         : ''
     }
   </div>
 `;
+};
 
 const renderTextField = (name, label, value = '', required = false) => `
   <label class="block space-y-1 text-sm text-text">
