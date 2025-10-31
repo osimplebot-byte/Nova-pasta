@@ -1,6 +1,14 @@
 import { api } from './api.js';
 import { getState, setState, showToast } from './state.js';
 
+const escapeHTML = (value) =>
+  String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
 const icon = (name, classes = '') => {
   const cls = `icon ${classes}`.trim();
   switch (name) {
@@ -516,7 +524,7 @@ const renderConexoes = (state) => {
 };
 
 const renderAjuda = (state) => {
-  const supportDraft = state.forms?.support || '';
+  const supportDraft = escapeHTML(state.forms?.support || '');
   const isSending = state.pending?.supportSend;
 
   return `
