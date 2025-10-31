@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-labelledby="title desc">
+  <title id="title">Ícone OMR Studio</title>
+  <desc id="desc">Balão rosa com engrenagem branca centralizada.</desc>
+  <path fill="#D81B60" d="M40 20h80a24 24 0 0 1 24 24v32a24 24 0 0 1-24 24H88l-32 32v-32H40a24 24 0 0 1-24-24V44A24 24 0 0 1 40 20z"/>
+  <g transform="translate(20 22)">
+    <circle cx="60" cy="60" r="26" fill="none" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" stroke-dasharray="38 26"/>
+    <circle cx="60" cy="60" r="14" fill="#FFFFFF"/>
+    <circle cx="60" cy="60" r="6" fill="#D81B60"/>
+  </g>
+</svg>
