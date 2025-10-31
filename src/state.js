@@ -33,6 +33,7 @@ const state = {
   },
   chat: {
     messages: [],
+    useDemo: false,
   },
   onboardingStep: 0,
   isTourVisible: true,
