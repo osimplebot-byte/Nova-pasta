@@ -9,9 +9,9 @@ export const renderOnboarding = () => `
         <p class="text-xs text-text-muted">Completar estes passos libera o teste completo.</p>
       </header>
       <ol class="onboarding-steps space-y-3 pt-3 text-sm text-text">
-        <li class="flex items-start gap-3"><span class="pulse-dot mt-1"></span> Preencha os dados do negocio.</li>
-        <li class="flex items-start gap-3"><span class="pulse-dot mt-1"></span> Teste a experiencia no simulador.</li>
-        <li class="flex items-start gap-3"><span class="pulse-dot mt-1"></span> Conecte o WhatsApp na aba Conexoes.</li>
+        <li class="flex items-start gap-3"><span class="pulse-dot mt-1"></span> Preencha os dados do negócio.</li>
+        <li class="flex items-start gap-3"><span class="pulse-dot mt-1"></span> Teste a experiência no simulador.</li>
+        <li class="flex items-start gap-3"><span class="pulse-dot mt-1"></span> Conecte o WhatsApp na aba Conexões.</li>
       </ol>
       <button id="close-onboarding" class="toggle-chip onboarding-dismiss mt-4 w-full justify-center text-sm">Entendi</button>
     </div>

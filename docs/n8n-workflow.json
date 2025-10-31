@@ -19,7 +19,7 @@
     },
     {
       "parameters": {
-        "content": "## Fluxo Principal - OMR Backend\n\n### Objetivo\nOrquestrar todas as operações do SPA através de um único endpoint `/webhook/api-backend`.\n\n### Roteamento\n- Autenticação: auth.login, auth.me, auth.logout\n- Dados do negócio: dados.get, dados.save\n- Simulador interno: sim.chat\n- Conexões Evolution: inst.qr, inst.status, inst.refresh, inst.disconnect, inst.update\n- Suporte: support.chat\n- Notificações internas: internal.notify\n\n### Envelope de request\n```json\n{\n  \"action\": \"dados.get\",\n  \"auth\": { \"user_id\": \"uuid\", \"session_token\": \"token\" },\n  \"payload\": { ... }\n}\n```\n\n### Envelope de response\n```json\n{ \"ok\": true, \"data\": { ... }, \"error\": null }\n```",
+        "content": "## Fluxo Principal - OMR Backend\n\n### Objetivo\nOrquestrar todas as operações do SPA através de um único endpoint `/webhook/api-backend`.\n\n### Roteamento\n- Autenticação: auth.login, auth.me, auth.logout\n- Dados do negócio: dados.get, dados.save\n- Simulador interno: sim.chat\n- Conexões Evolution: inst.qr, inst.status, inst.refresh, inst.disconnect, inst.update\n- Suporte: support.chat\n- Notificações internas: internal.notify\n\n### Envelope da requisição\n```json\n{\n  \"action\": \"dados.get\",\n  \"auth\": { \"user_id\": \"uuid\", \"session_token\": \"token\" },\n  \"payload\": { ... }\n}\n```\n\n### Envelope da resposta\n```json\n{ \"ok\": true, \"data\": { ... }, \"error\": null }\n```",
         "height": 640,
         "width": 520,
         "color": 4
@@ -31,7 +31,7 @@
         -240
       ],
       "id": "2d3d1f25-6d81-48a4-8c2f-9b5b7c1eae2f",
-      "name": "Documentacao"
+      "name": "Documentação"
     },
     {
       "parameters": {
@@ -442,7 +442,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const registro = items[0]?.json || {};\n\nconst empresa = registro.empresa || {\n  nome: registro.nome || 'N/A',\n  tipo: registro.tipo || 'N/A',\n  horario_funcionamento: registro.horario_funcionamento || 'N/A',\n  contatos_extras: registro.contatos_extras || [],\n  endereco: registro.endereco || 'N/A',\n  observacoes: registro.observacoes || '',\n  persona: registro.persona || 'default'\n};\n\nconst produtos = Array.isArray(registro.produtos) ? registro.produtos : [];\nconst faqs = Array.isArray(registro.faqs) ? registro.faqs : [];\n\nconst personaSelecionada = registro.persona_selected || empresa.persona || 'default';\nconst mensagemUsuario = registro.user_message || '';\n\nconst contatosExtras = Array.isArray(empresa.contatos_extras) ? empresa.contatos_extras.join(', ') : empresa.contatos_extras || 'N/A';\n\nlet promptDados = `Empresa: ${empresa.nome}\nSegmento: ${empresa.tipo}\nEndereco: ${empresa.endereco}\nHorario de funcionamento: ${empresa.horario_funcionamento}\nContatos adicionais: ${contatosExtras}\nObservacoes: ${empresa.observacoes || 'Sem observacoes'}\n`;\n\nif (produtos.length > 0) {\n  promptDados += '\nProdutos e servicos:\n';\n  produtos.forEach((produto, index) => {\n    const nome = produto.nome || `Item ${index + 1}`;\n    const preco = produto.preco != null ? produto.preco : 'N/A';\n    const descricao = produto.descricao || 'Sem descricao';\n    promptDados += `- ${nome} (R$ ${preco}): ${descricao}\n`;\n  });\n}\n\nif (faqs.length > 0) {\n  promptDados += '\nPerguntas frequentes:\n';\n  faqs.forEach((faq, index) => {\n    const pergunta = faq.pergunta || `Pergunta ${index + 1}`;\n    const resposta = faq.resposta || 'Sem resposta cadastrada';\n    promptDados += `Q: ${pergunta}\nA: ${resposta}\n`;\n  });\n}\n\nlet personaPrompt = 'Mantenha um tom neutro e prestativo.';\nif (personaSelecionada.toLowerCase() === 'josi') {\n  personaPrompt = 'Você é Josi, receptiva e animada. Responda com entusiasmo e cordialidade, usando ate 3 emojis por mensagem e frases curtas.';\n} else if (personaSelecionada.toLowerCase() === 'clara') {\n  personaPrompt = 'Você é Clara, objetiva e profissional. Responda de forma clara, direta e sem floreios.';\n}\n\nconst systemMessage = `Você é a atendente virtual do estúdio. Oriente clientes com clareza e resolva dúvidas de forma eficiente.\n\n${personaPrompt}\n\nContexto do negócio:\n${promptDados}`.trim();\n\nreturn [\n  {\n    json: {\n      system_message: systemMessage,\n      user_message: mensagemUsuario\n    }\n  }\n];\n"
+        "jsCode": "const registro = items[0]?.json || {};\n\nconst empresa = registro.empresa || {\n  nome: registro.nome || 'N/A',\n  tipo: registro.tipo || 'N/A',\n  horario_funcionamento: registro.horario_funcionamento || 'N/A',\n  contatos_extras: registro.contatos_extras || [],\n  endereco: registro.endereco || 'N/A',\n  observacoes: registro.observacoes || '',\n  persona: registro.persona || 'default'\n};\n\nconst produtos = Array.isArray(registro.produtos) ? registro.produtos : [];\nconst faqs = Array.isArray(registro.faqs) ? registro.faqs : [];\n\nconst personaSelecionada = registro.persona_selected || empresa.persona || 'default';\nconst mensagemUsuario = registro.user_message || '';\n\nconst contatosExtras = Array.isArray(empresa.contatos_extras) ? empresa.contatos_extras.join(', ') : empresa.contatos_extras || 'N/A';\n\nlet promptDados = `Empresa: ${empresa.nome}\nSegmento: ${empresa.tipo}\nEndereço: ${empresa.endereco}\nHorário de funcionamento: ${empresa.horario_funcionamento}\nContatos adicionais: ${contatosExtras}\nObservações: ${empresa.observacoes || 'Sem observações'}\n`;\n\nif (produtos.length > 0) {\n  promptDados += '\nProdutos e serviços:\n';\n  produtos.forEach((produto, index) => {\n    const nome = produto.nome || `Item ${index + 1}`;\n    const preco = produto.preco != null ? produto.preco : 'N/A';\n    const descricao = produto.descricao || 'Sem descrição';\n    promptDados += `- ${nome} (R$ ${preco}): ${descricao}\n`;\n  });\n}\n\nif (faqs.length > 0) {\n  promptDados += '\nPerguntas frequentes:\n';\n  faqs.forEach((faq, index) => {\n    const pergunta = faq.pergunta || `Pergunta ${index + 1}`;\n    const resposta = faq.resposta || 'Sem resposta cadastrada';\n    promptDados += `Q: ${pergunta}\nA: ${resposta}\n`;\n  });\n}\n\nlet personaPrompt = 'Mantenha um tom neutro e prestativo.';\nif (personaSelecionada.toLowerCase() === 'josi') {\n  personaPrompt = 'Você é Josi, receptiva e animada. Responda com entusiasmo e cordialidade, usando até 3 emojis por mensagem e frases curtas.';\n} else if (personaSelecionada.toLowerCase() === 'clara') {\n  personaPrompt = 'Você é Clara, objetiva e profissional. Responda de forma clara, direta e sem floreios.';\n}\n\nconst systemMessage = `Você é a atendente virtual do estúdio. Oriente clientes com clareza e resolva dúvidas de forma eficiente.\n\n${personaPrompt}\n\nContexto do negócio:\n${promptDados}`.trim();\n\nreturn [\n  {\n    json: {\n      system_message: systemMessage,\n      user_message: mensagemUsuario\n    }\n  }\n];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -482,7 +482,7 @@
         1120
       ],
       "id": "b6a9cce4-83e0-4e9d-9b27-94a07d96002a",
-      "name": "Memoria Conversa"
+      "name": "Memória da Conversa"
     },
     {
       "parameters": {
@@ -737,7 +737,7 @@
         ]
       ]
     },
-    "Memoria Conversa": {
+    "Memória da Conversa": {
       "ai_memory": [
         [
           {
