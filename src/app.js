@@ -96,7 +96,7 @@ const bootstrap = () => {
   applyLayoutResize();
   applyLayoutScroll();
 
-  console.log('[OMR:APP] Aplicacao carregada.');
+  console.log('[OMR:APP] Aplicação carregada.');
 };
 
 bootstrap();

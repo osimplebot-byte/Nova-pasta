@@ -63,7 +63,7 @@ const TOAST_TONES = {
 const TAB_CONFIG = [
   { id: 'dados', label: 'Dados', icon: 'dados' },
   { id: 'test-drive', label: 'Test-Drive', icon: 'test-drive' },
-  { id: 'conexoes', label: 'Conexoes', icon: 'conexoes' },
+  { id: 'conexoes', label: 'Conexões', icon: 'conexoes' },
   { id: 'ajuda', label: 'Ajuda', icon: 'ajuda' },
 ];
 
@@ -286,8 +286,8 @@ const renderLogin = (state) => {
 
         <form id="login-form" class="space-y-6">
           <label class="block space-y-2 text-sm text-text">
-            <span class="font-medium">Email</span>
-            <input class="input-field w-full" type="email" id="login-email" required placeholder="voce@escola.com" autocomplete="email" value="${loginEmail}" />
+            <span class="font-medium">E-mail</span>
+            <input class="input-field w-full" type="email" id="login-email" required placeholder="você@escola.com" autocomplete="email" value="${loginEmail}" />
           </label>
           <label class="block space-y-2 text-sm text-text">
             <span class="font-medium">Senha</span>
@@ -312,7 +312,7 @@ const renderLogin = (state) => {
             <span class="block">
               Apenas testando?
               <button id="enter-demo" type="button" class="text-text underline">
-                Entrar no modo demo
+                Entrar no modo demonstração
               </button>
             </span>
           </p>
@@ -405,7 +405,7 @@ const renderView = (state) => {
     case 'ajuda':
       return renderAjuda(state);
     default:
-      return `<section class="neon-card p-8 text-text">View em construcao.</section>`;
+      return `<section class="neon-card p-8 text-text">View em construção.</section>`;
   }
 };
 
@@ -414,7 +414,7 @@ const renderAppHeader = (state) => {
 
   return `
   <header class="app-topbar glass-panel sticky top-6 z-30 mx-4 flex items-center gap-4 rounded-2xl px-4 py-3 sm:mx-8">
-    <button id="drawer-toggle" class="icon-toggle" type="button" aria-label="Abrir menu de secoes">
+    <button id="drawer-toggle" class="icon-toggle" type="button" aria-label="Abrir menu de seções">
       ${icon('menu')}
     </button>
     ${renderBrandLockup({ variant: 'icon', size: 'xs', label: 'OMR Studio', className: 'topbar-brand' })}
@@ -427,7 +427,7 @@ const renderAppHeader = (state) => {
         ${icon(themeIconName)}
         <span class="sr-only">Alternar tema</span>
       </button>
-      <button id="logout" class="icon-toggle" type="button" aria-label="Encerrar sessao">
+      <button id="logout" class="icon-toggle" type="button" aria-label="Encerrar sessão">
         ${icon('logout')}
         <span class="sr-only">Sair</span>
       </button>
@@ -449,18 +449,18 @@ const renderDados = (state) => {
   return `
     <section class="space-y-6">
       <header class="space-y-1">
-        <h3 class="text-lg font-semibold text-text">Dados do negocio</h3>
-        <p class="text-sm text-text-muted">Preencha as informacoes base para alimentar o agente.</p>
+        <h3 class="text-lg font-semibold text-text">Dados do negócio</h3>
+        <p class="text-sm text-text-muted">Preencha as informações base para alimentar o agente.</p>
       </header>
 
       <form id="dados-form" class="neon-card space-y-6 px-6 py-7">
         <div class="grid gap-4">
           ${renderTextField('empresa_nome', 'Nome da empresa', empresaForm.nome, true)}
-          ${renderTextField('empresa_tipo', 'Tipo de negocio', empresaForm.tipo)}
-          ${renderTextField('horario_funcionamento', 'Horario de funcionamento', empresaForm.horario_funcionamento)}
+          ${renderTextField('empresa_tipo', 'Tipo de negócio', empresaForm.tipo)}
+          ${renderTextField('horario_funcionamento', 'Horário de funcionamento', empresaForm.horario_funcionamento)}
           ${renderTextField('contatos_extras', 'Contatos extras', empresaForm.contatos_extras)}
-          ${renderTextField('endereco', 'Endereco', empresaForm.endereco)}
-          ${renderTextArea('observacoes', 'Observacoes', empresaForm.observacoes)}
+          ${renderTextField('endereco', 'Endereço', empresaForm.endereco)}
+          ${renderTextArea('observacoes', 'Observações', empresaForm.observacoes)}
         </div>
 
         <div class="space-y-2">
@@ -486,7 +486,7 @@ const renderDados = (state) => {
         <section class="space-y-4">
           <header>
             <h4 class="text-sm font-semibold text-text">Produtos</h4>
-            <p class="text-xs text-text-muted">Liste produtos ou servicos oferecidos.</p>
+            <p class="text-xs text-text-muted">Liste produtos ou serviços oferecidos.</p>
           </header>
           <div id="produtos-list" class="space-y-3">
             ${produtos.map((produto, index) => renderProdutoCard(index, produto)).join('')}
@@ -497,7 +497,7 @@ const renderDados = (state) => {
         <section class="space-y-4">
           <header>
             <h4 class="text-sm font-semibold text-text">FAQs</h4>
-            <p class="text-xs text-text-muted">Questoes frequentes para o bot.</p>
+            <p class="text-xs text-text-muted">Questões frequentes para o bot.</p>
           </header>
           <div id="faqs-list" class="space-y-3">
             ${faqs.map((faq, index) => renderFaqCard(index, faq)).join('')}
@@ -514,7 +514,7 @@ const renderDados = (state) => {
         </div>
 
         <div class="flex items-center justify-between text-xs text-text-muted">
-          <span>Ultima sincronizacao: ${
+          <span>Última sincronização: ${
             lastSync ? new Date(lastSync).toLocaleString('pt-BR') : 'nunca'
           }</span>
           <button
@@ -537,60 +537,82 @@ const renderTestDrive = (state) => {
   const personaValue = state.forms?.chatPersona || 'josi';
   const lastMessageId = messages.length ? messages[messages.length - 1].id : '';
 
+  const suggestions = [
+    { emoji: '🛍️', text: 'Quais produtos vocês oferecem?' },
+    { emoji: '⏰', text: 'Qual o horário de atendimento?' },
+    { emoji: '🙋', text: 'Existe suporte humano?' },
+  ];
+
   return `
-    <section class="space-y-4">
-      <header class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h3 class="text-lg font-semibold text-text">Simulador</h3>
-          <p class="text-sm text-text-muted">Converse com o agente usando dados reais ou demo.</p>
-        </div>
-        <div class="flex items-center gap-2">
-          <select id="persona-toggle" class="input-field text-sm" ${isSending ? 'disabled' : ''}>
-            <option value="josi" ${personaValue === 'josi' ? 'selected' : ''}>Josi</option>
-            <option value="clara" ${personaValue === 'clara' ? 'selected' : ''}>Clara</option>
-          </select>
-          <button id="toggle-demo" class="toggle-chip text-xs">Dados demo</button>
+    <section class="flex flex-col gap-6">
+      <header class="space-y-4">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div class="space-y-1">
+            <h3 class="text-2xl font-semibold leading-tight text-text">Test-Drive</h3>
+            <p class="text-sm text-text-muted">Converse com o agente usando dados reais ou demo.</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-3">
+            <label for="persona-toggle" class="text-xs font-semibold uppercase tracking-[0.32em] text-text-muted">
+              Persona
+            </label>
+            <select id="persona-toggle" class="input-field w-full bg-black/10 text-sm sm:w-auto" ${isSending ? 'disabled' : ''}>
+              <option value="josi" ${personaValue === 'josi' ? 'selected' : ''}>Josi</option>
+              <option value="clara" ${personaValue === 'clara' ? 'selected' : ''}>Clara</option>
+            </select>
+          </div>
         </div>
       </header>
 
-      <section class="neon-card flex flex-col gap-4 px-6 py-6">
-        <div
-          id="chat-log"
-          class="glass-panel flex max-h-[360px] flex-col gap-3 overflow-y-auto px-4 py-4 text-sm text-text"
-          data-last-message="${lastMessageId}"
-          data-has-messages="${messages.length > 0}"
-        >
-          ${
-            messages.length
-              ? messages.map((entry) => renderChatBubble(entry)).join('')
-              : '<p class="text-text-muted">Nenhuma mensagem ainda. Envie algo para comecar.</p>'
-          }
-        </div>
-        <div class="flex flex-col gap-3">
-          <div class="flex flex-wrap gap-2 text-xs">
-            ${['Quais produtos voces oferecem?', 'Qual o horario de atendimento?', 'Existe suporte humano?']
-                .map((suggestion) => `
-                  <button class="toggle-chip text-xs" data-suggestion="${suggestion}">
-                    ${suggestion}
-                  </button>
-                `)
-                .join('')}
+      <section class="neon-card">
+        <div class="flex flex-col gap-6 rounded-[1.05rem] bg-surface p-6 shadow-[0_24px_60px_rgba(8,5,24,0.45)]">
+          <div
+            id="chat-log"
+            class="flex max-h-[420px] flex-col gap-4 overflow-y-auto rounded-3xl border border-border bg-black/20 px-5 py-6 text-sm text-text shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
+            data-last-message="${lastMessageId}"
+            data-has-messages="${messages.length > 0}"
+          >
+            ${
+              messages.length
+                ? messages.map((entry) => renderChatBubble(entry)).join('')
+                : '<p class="text-center text-sm text-text-muted">Nenhuma mensagem ainda. Envie algo para começar.</p>'
+            }
           </div>
-          <form id="chat-form" class="flex gap-2">
-            <input id="chat-input" class="input-field flex-1 text-sm" placeholder="Digite uma mensagem..." ${
-              isSending ? 'disabled' : ''
-            } />
-            <button
-              type="submit"
-              class="btn-primary px-5 py-3 text-sm font-semibold uppercase tracking-[0.18em] ${
-                isSending ? 'btn-loading' : ''
-              }"
-              ${isSending ? 'disabled' : ''}
-            >
-              ${isSending ? renderSpinner('sm') : ''}
-              <span class="btn-label">Enviar</span>
-            </button>
-          </form>
+
+          <div class="flex flex-col gap-4">
+            <div class="flex flex-wrap justify-center gap-2">
+              ${suggestions
+                .map(
+                  (item) => `
+                    <button
+                      class="chat-suggestion"
+                      data-suggestion="${item.text}"
+                      type="button"
+                    >
+                      <span aria-hidden="true">${item.emoji}</span>
+                      <span>${item.text}</span>
+                    </button>
+                  `,
+                )
+                .join('')}
+            </div>
+
+            <form id="chat-form" class="flex flex-col gap-3 sm:flex-row">
+              <input
+                id="chat-input"
+                class="input-field flex-1 text-base sm:min-h-[52px]"
+                placeholder="Digite uma mensagem..."
+                ${isSending ? 'disabled' : ''}
+              />
+              <button
+                type="submit"
+                class="chat-submit-button ${isSending ? 'btn-loading' : ''}"
+                ${isSending ? 'disabled' : ''}
+              >
+                ${isSending ? renderSpinner('sm') : ''}
+                <span class="chat-submit-label">ENVIAR</span>
+              </button>
+            </form>
+          </div>
         </div>
       </section>
     </section>
@@ -604,79 +626,138 @@ const renderConexoes = (state) => {
   const isRefreshing = state.pending?.instRefresh;
   const isDisconnecting = state.pending?.instDisconnect;
   const isSaving = state.pending?.instSave;
+  const statusLabel = escapeHTML(instancia.status || 'Desconectado');
+  const normalizedStatus = statusLabel.toLowerCase();
+  const isOnline = ['conectado', 'connected', 'online', 'on'].some((flag) =>
+    normalizedStatus.includes(flag),
+  );
+  const lastEventRaw = typeof instancia.last_event === 'string' ? instancia.last_event.trim() : '';
+  const hasLastEvent = Boolean(lastEventRaw);
+  const lastEvent = hasLastEvent
+    ? `Ultimo evento: ${escapeHTML(lastEventRaw)}`
+    : 'Sem registros recentes.';
+  const qrMarkup = instancia.qr_svg
+    ? `<img src="data:image/svg+xml;utf8,${encodeURIComponent(instancia.qr_svg)}" alt="QR Code" class="connections-qr__image" />`
+    : '<span class="connections-qr__placeholder">Nenhum QR disponivel. Clique em atualizar.</span>';
+
+  const toggleOptions = [
+    {
+      name: 'rejeitar_chamadas',
+      label: 'Rejeitar chamadas',
+      description: 'Recusa automaticamente ligacoes recebidas pelo numero.',
+      checked: instancia.rejeitar_chamadas,
+    },
+    {
+      name: 'ignorar_grupos',
+      label: 'Ignorar grupos',
+      description: 'Nao responde mensagens enviadas em conversas de grupo.',
+      checked: instancia.ignorar_grupos,
+    },
+    {
+      name: 'sempre_online',
+      label: 'Sempre online',
+      description: 'Mantem o status da instancia como ativo continuamente.',
+      checked: instancia.sempre_online,
+    },
+    {
+      name: 'ler_mensagens',
+      label: 'Ler mensagens',
+      description: 'Marca as mensagens como lidas apos o processamento.',
+      checked: instancia.ler_mensagens,
+    },
+    {
+      name: 'sincronizar_historico',
+      label: 'Sincronizar historico',
+      description: 'Busca mensagens anteriores ao concluir a conexao.',
+      checked: instancia.sincronizar_historico,
+    },
+  ];
 
   return `
-    <section class="space-y-6">
+    <section class="space-y-6 connections-view">
       <header class="space-y-1">
         <h3 class="text-lg font-semibold text-text">Conexoes Evolution API</h3>
-        <p class="text-sm text-text-muted">Status da integracao com WhatsApp.</p>
+        <p class="text-sm text-text-muted">Acompanhe a integracao com o WhatsApp e ajuste os comportamentos da instancia.</p>
       </header>
 
-      <section class="neon-card space-y-4 px-6 py-6">
-        <div class="flex flex-col gap-4 md:flex-row">
-          <div class="flex-1 space-y-2">
-            <p class="text-sm text-text-muted">Status atual</p>
-            <p class="text-2xl font-semibold text-text">${instancia.status || 'Desconectado'}</p>
-            <div class="text-xs text-text-muted">Ultimo evento: ${instancia.last_event || 'Sem registros'}</div>
+      <div class="connections-grid">
+        <section class="neon-card connections-card px-6 py-6">
+          <div class="connections-card__header">
+            <div class="connections-card__title">
+              <span class="connections-card__label">Telefone</span>
+              <span class="connections-card__caption">Status</span>
+              <p class="connections-card__status">${statusLabel}</p>
+            </div>
+            <span class="connections-card__badge ${isOnline ? 'is-online' : 'is-offline'}">${isOnline ? 'ON' : 'OFF'}</span>
           </div>
-          <div class="glass-panel flex flex-1 items-center justify-center rounded-2xl px-4 py-4 text-center text-sm text-text-muted">
-            ${instancia.qr_svg ? `<img src="data:image/svg+xml;utf8,${encodeURIComponent(instancia.qr_svg)}" alt="QR Code" class="max-w-[240px]" />` : 'Nenhum QR disponivel. Clique em atualizar conexao.'}
+          <p class="connections-card__event">${lastEvent}</p>
+          <div class="connections-qr glass-panel">
+            ${qrMarkup}
           </div>
-        </div>
+          <div class="connections-card__actions">
+            <button
+              id="inst-refresh"
+              class="btn-primary connections-card__action ${isRefreshing ? 'btn-loading' : ''}"
+              ${isRefreshing ? 'disabled' : ''}
+            >
+              ${isRefreshing ? renderSpinner('sm') : ''}
+              <span class="btn-label">🔄 Atualizar</span>
+            </button>
+            <button
+              id="inst-disconnect"
+              class="btn-danger connections-card__action ${isDisconnecting ? 'btn-loading' : ''}"
+              type="button"
+              ${isDisconnecting ? 'disabled' : ''}
+            >
+              ${isDisconnecting ? renderSpinner('sm') : ''}
+              <span class="btn-label">📴 Desconectar</span>
+            </button>
+          </div>
+        </section>
 
-        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          ${renderToggle('rejeitar_chamadas', 'Rejeitar chamadas', instancia.rejeitar_chamadas)}
-          ${renderToggle('ignorar_grupos', 'Ignorar grupos', instancia.ignorar_grupos)}
-          ${renderToggle('sempre_online', 'Sempre online', instancia.sempre_online)}
-          ${renderToggle('ler_mensagens', 'Marcar como lidas', instancia.ler_mensagens)}
-          ${renderToggle('sincronizar_historico', 'Sincronizar historico', instancia.sincronizar_historico)}
-        </div>
+        <section class="neon-card connections-settings px-6 py-6">
+          <header class="connections-settings__header">
+            <div>
+              <h4>Configuracoes</h4>
+              <p>Defina como o Evolution API deve tratar chamadas, grupos e confirmacoes de leitura.</p>
+            </div>
+          </header>
+          <div class="connections-settings__grid">
+            ${toggleOptions
+              .map((option) =>
+                renderToggle(option.name, option.label, option.description, Boolean(option.checked)),
+              )
+              .join('')}
+          </div>
+          <div class="connections-settings__message">
+            <label class="connections-settings__message-label" for="mensagem-rejeicao">Mensagem para chamadas rejeitadas</label>
+            <textarea id="mensagem-rejeicao" class="input-field h-24 w-full text-sm" placeholder="Mensagem de retorno">${escapeHTML(instancia.mensagem_rejeicao || '')}</textarea>
+          </div>
+          <div class="connections-settings__footer">
+            <button
+              id="inst-save"
+              class="btn-primary connections-settings__save ${isSaving ? 'btn-loading' : ''}"
+              type="button"
+              ${isSaving ? 'disabled' : ''}
+            >
+              ${isSaving ? renderSpinner('sm') : ''}
+              <span class="btn-label">Salvar configuracoes</span>
+            </button>
+          </div>
+        </section>
 
-        <div class="space-y-2">
-          <label class="text-sm font-medium text-text">Mensagem para chamadas rejeitadas</label>
-          <textarea id="mensagem-rejeicao" class="input-field h-24 w-full text-sm" placeholder="Mensagem de retorno">${instancia.mensagem_rejeicao || ''}</textarea>
-        </div>
-
-        <div class="flex flex-wrap gap-2">
-          <button
-            id="inst-refresh"
-            class="btn-primary px-5 py-3 text-sm font-semibold uppercase tracking-[0.18em] ${
-              isRefreshing ? 'btn-loading' : ''
-            }"
-            ${isRefreshing ? 'disabled' : ''}
-          >
-            ${isRefreshing ? renderSpinner('sm') : ''}
-            <span class="btn-label">Atualizar conexao</span>
-          </button>
-          <button
-            id="inst-disconnect"
-            class="toggle-chip text-sm ${isDisconnecting ? 'btn-loading' : ''}"
-            type="button"
-            ${isDisconnecting ? 'disabled' : ''}
-          >
-            ${isDisconnecting ? renderSpinner('sm') : ''}
-            <span class="btn-label">Desconectar</span>
-          </button>
-          <button
-            id="inst-save"
-            class="toggle-chip text-sm ${isSaving ? 'btn-loading' : ''}"
-            type="button"
-            ${isSaving ? 'disabled' : ''}
-          >
-            ${isSaving ? renderSpinner('sm') : ''}
-            <span class="btn-label">Salvar configuracoes</span>
-          </button>
-        </div>
-      </section>
-
-      <section class="neon-card px-6 py-6">
-        <header class="mb-3 text-sm font-semibold text-text">Eventos recentes</header>
-        <ul class="space-y-2 text-sm text-text-muted" id="inst-log">
-          ${(instancia.logs || [{ ts: Date.now(), message: 'Sem logs disponiveis.' }])
-            .map((log) => `<li>• ${formatLog(log)}</li>`)
-            .join('')}
-        </ul>
-      </section>
+        <section class="neon-card connections-log px-6 py-6">
+          <header class="connections-log__header">
+            <h4>Eventos recentes</h4>
+            <p>Historico basico da instancia para acompanhamento rapido.</p>
+          </header>
+          <ul class="connections-log__list" id="inst-log">
+            ${(instancia.logs || [{ ts: Date.now(), message: 'Sem logs disponiveis.' }])
+              .map((log) => `<li>${formatLog(log)}</li>`)
+              .join('')}
+          </ul>
+        </section>
+      </div>
     </section>
   `;
 };
@@ -689,14 +770,14 @@ const renderAjuda = (state) => {
     <section class="space-y-6">
       <header class="space-y-1">
         <h3 class="text-lg font-semibold text-text">Suporte OMR</h3>
-        <p class="text-sm text-text-muted">Consulte a base rapida ou acione a equipe humana.</p>
+        <p class="text-sm text-text-muted">Consulte a base rápida ou acione a equipe humana.</p>
       </header>
 
       ${renderBrandKit()}
 
       <section class="neon-card space-y-4 px-6 py-6">
         <div class="space-y-3">
-          <h4 class="text-sm font-semibold text-text">Links uteis</h4>
+          <h4 class="text-sm font-semibold text-text">Links úteis</h4>
           <ul class="space-y-2 text-sm text-text-muted">
             <li><a class="text-primary underline" href="https://docs.omrstudio.dev/base" target="_blank" rel="noopener">Documento base</a></li>
             <li><a class="text-primary underline" href="mailto:suporte@omrstudio.dev" target="_blank" rel="noopener">Contato por e-mail</a></li>
@@ -771,11 +852,11 @@ const renderProdutoCard = (index, produto = {}) => `
       <input class="input-field w-full text-sm" name="produtos[${index}].nome" data-field="nome" value="${produto?.nome || ''}" required />
     </label>
     <label class="block space-y-1 text-sm text-text">
-      <span class="font-medium">Descricao</span>
+      <span class="font-medium">Descrição</span>
       <input class="input-field w-full text-sm" name="produtos[${index}].descricao" data-field="descricao" value="${produto?.descricao || ''}" />
     </label>
     <label class="block space-y-1 text-sm text-text">
-      <span class="font-medium">Preco</span>
+      <span class="font-medium">Preço</span>
       <input class="input-field w-full text-sm" name="produtos[${index}].preco" data-field="preco" value="${produto?.preco || ''}" />
     </label>
   </div>
@@ -800,20 +881,36 @@ const renderFaqCard = (index, faq = {}) => `
   </div>
 `;
 
-const renderToggle = (name, label, checked) => `
-  <label class="glass-panel flex items-center justify-between gap-3 rounded-2xl px-4 py-3 text-sm">
-    <span>${label}</span>
-    <input type="checkbox" name="${name}" ${checked ? 'checked' : ''} class="h-5 w-5 rounded border-border text-primary focus:ring-primary" />
+const renderToggle = (name, label, description, checked) => `
+  <label class="connections-switch glass-panel">
+    <div class="connections-switch__text">
+      <span class="connections-switch__title">${label}</span>
+      <span class="connections-switch__description">${description}</span>
+    </div>
+    <span class="connections-switch__control">
+      <input
+        type="checkbox"
+        name="${name}"
+        ${checked ? 'checked' : ''}
+        class="connections-switch__native"
+      />
+      <span class="connections-switch__visual" aria-hidden="true">
+        <span class="connections-switch__thumb"></span>
+      </span>
+    </span>
   </label>
 `;
 
 const renderChatBubble = (message) => {
-  const alignment = message.role === 'user' ? 'self-end text-right' : 'self-start text-left';
-  const author = message.author || (message.role === 'user' ? 'Voce' : 'Agente');
+  const author = escapeHTML(message.author || (message.role === 'user' ? 'Voce' : 'Agente'));
+  const text = escapeHTML(message.message || '');
+  const baseAlignment = message.role === 'user' ? 'self-end text-left' : 'self-start text-left';
+  const variantClass = message.role === 'user' ? 'chat-bubble chat-bubble--user' : 'chat-bubble chat-bubble--agent';
+
   return `
-    <div class="glass-panel chat-bubble flex flex-col gap-1 px-4 py-3 text-sm ${alignment}" data-chat-message="${message.id}">
-      <span class="text-xs font-semibold text-primary">${author}</span>
-      <p class="whitespace-pre-line text-text">${message.message}</p>
+    <div class="${variantClass} ${baseAlignment}" data-chat-message="${message.id}" data-chat-role="${message.role}">
+      <span class="chat-bubble-author">${author}</span>
+      <p class="chat-bubble-content">${text}</p>
     </div>
   `;
 };
@@ -836,7 +933,7 @@ const bindLoginView = () => {
     const password = /** @type {HTMLInputElement} */ (document.getElementById('login-password'))?.value.trim();
 
     if (!email || !password) {
-      showToast('Informe email e senha.', 'error');
+      showToast('Informe e-mail e senha.', 'error');
       return;
     }
 
@@ -927,7 +1024,7 @@ const bindLogout = () => {
         }),
         'logout:manual',
       );
-      showToast('Sessao encerrada.');
+      showToast('Sessão encerrada.');
     }
   });
 };
@@ -1115,6 +1212,32 @@ const bindChat = () => {
   const input = document.getElementById('chat-input');
   const log = document.getElementById('chat-log');
   const personaSelect = document.getElementById('persona-toggle');
+  const demoSwitch = document.getElementById('toggle-demo');
+
+  demoSwitch?.addEventListener('click', () => {
+    const isActive = demoSwitch.getAttribute('data-active') === 'true';
+    const nextState = (!isActive).toString();
+
+    demoSwitch.setAttribute('data-active', nextState);
+    demoSwitch.setAttribute('aria-pressed', nextState);
+    demoSwitch.classList.toggle('on', nextState === 'true');
+    demoSwitch.classList.toggle('off', nextState === 'false');
+
+    const label = demoSwitch.querySelector('.demo-switch-label');
+    if (label) {
+      label.textContent = nextState === 'true' ? 'ON' : 'OFF';
+    }
+
+    setState(
+      (prev) => ({
+        chat: {
+          ...prev.chat,
+          useDemo: nextState === 'true',
+        },
+      }),
+      'chat:demo-toggle',
+    );
+  });
 
   personaSelect?.addEventListener('change', () => {
     const value = personaSelect.value || 'josi';
@@ -1141,7 +1264,7 @@ const bindChat = () => {
     input.value = '';
 
     const persona = personaSelect?.value || 'josi';
-    const userEntry = createChatMessageEntry('Voce', 'user', message);
+    const userEntry = createChatMessageEntry('Você', 'user', message);
 
     setState(
       (prev) => ({
@@ -1217,7 +1340,7 @@ const bindInstancias = () => {
         }),
         'inst:refresh',
       );
-      showToast('Conexao atualizada.');
+      showToast('Conexão atualizada.');
     } catch (error) {
       setState(
         (prev) => ({
@@ -1225,7 +1348,7 @@ const bindInstancias = () => {
         }),
         'pending:inst-refresh:error',
       );
-      showToast(error?.message || 'Erro ao atualizar conexao.', 'error');
+      showToast(error?.message || 'Erro ao atualizar conexão.', 'error');
     }
   });
 
@@ -1246,7 +1369,7 @@ const bindInstancias = () => {
         }),
         'inst:disconnect',
       );
-      showToast('Instancia desconectada.');
+      showToast('Instância desconectada.');
     } catch (error) {
       setState(
         (prev) => ({
@@ -1291,7 +1414,7 @@ const bindInstancias = () => {
         }),
         'inst:update',
       );
-      showToast('Configuracoes salvas.');
+      showToast('Configurações salvas.');
     } catch (error) {
       setState(
         (prev) => ({
@@ -1300,7 +1423,7 @@ const bindInstancias = () => {
         }),
         'pending:inst-save:error',
       );
-      showToast(error?.message || 'Erro ao salvar configuracoes.', 'error');
+      showToast(error?.message || 'Erro ao salvar configurações.', 'error');
     }
   });
 };
@@ -1333,7 +1456,7 @@ const bindSupportForm = () => {
         }),
         'support:send:success',
       );
-      showToast(data?.reply || 'Solicitacao enviada.');
+      showToast(data?.reply || 'Solicitação enviada.');
     } catch (error) {
       setState(
         (prev) => ({
@@ -1384,7 +1507,7 @@ const handleLoginSuccess = async (data, options = {}) => {
 
   setState(nextState, 'login:success');
 
-  showToast(skipContext ? 'Sessao demo iniciada.' : 'Sessao iniciada com sucesso.');
+  showToast(skipContext ? 'Sessão demo iniciada.' : 'Sessão iniciada com sucesso.');
 
   if (skipContext) return;
 
@@ -1410,7 +1533,7 @@ const renderSignupModal = () => `
         <header class="space-y-2 text-center">
           <p class="pill-label text-primary">Criar conta</p>
           <h2 class="text-2xl font-semibold tracking-wide text-text">Acessar o OMR Studio</h2>
-          <p class="text-sm text-text-muted">Preencha os campos e nossa equipe habilita sua instancia piloto.</p>
+          <p class="text-sm text-text-muted">Preencha os campos e nossa equipe habilita sua instância piloto.</p>
         </header>
 
         <form id="signup-form" class="space-y-4">
@@ -1420,7 +1543,7 @@ const renderSignupModal = () => `
               <input class="input-field mt-2 w-full" name="full_name" required />
             </label>
             <label class="text-sm text-text">
-              <span class="font-medium">Email institucional</span>
+              <span class="font-medium">E-mail institucional</span>
               <input class="input-field mt-2 w-full" type="email" name="email" required />
             </label>
           </div>
@@ -1440,7 +1563,7 @@ const renderSignupModal = () => `
           </div>
           <label class="flex items-start gap-2 text-xs text-text-muted">
             <input id="signup-terms" type="checkbox" class="mt-1 h-4 w-4 rounded border-border" required />
-            <span>Concordo com os termos de uso piloto e politicas de dados OMR.</span>
+            <span>Concordo com os termos de uso piloto e políticas de dados OMR.</span>
           </label>
           <button type="submit" class="btn-primary w-full py-3 text-sm font-semibold uppercase tracking-[0.24em]">
             Enviar cadastro
@@ -1464,11 +1587,11 @@ const bindSignupModal = () => {
     const confirm = data.get('password_confirm');
 
     if (password !== confirm) {
-      showToast('As senhas nao conferem.', 'error');
+      showToast('As senhas não conferem.', 'error');
       return;
     }
 
-    showToast('Cadastro enviado (modo demo).');
+    showToast('Cadastro enviado (modo demonstração).');
     setState({ isSignupOpen: false }, 'signup:submitted');
   });
 };

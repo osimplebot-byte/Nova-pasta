@@ -9,7 +9,7 @@ Para compatibilidade com o frontend do MVP, todas as ações devem seguir o name
 | Fluxo legado | Novo contrato | Observações |
 | --- | --- | --- |
 | `login` | `auth.login` | Enviado sem `auth`. Payload `{ email, password }`. Retorne `{ user_id, session_token }`. |
-| `registro` | **Sem equivalente direto** | Cadastro será tratato fora do MVP. Remover do roteamento. |
+| `registro` | **Sem equivalente direto** | Cadastro será tratado fora do MVP. Remover do roteamento. |
 | `buscar_dados` | `dados.get` | Sem payload. Retorne `{ empresa, produtos, faqs }`. |
 | `salvar_dados` | `dados.save` | Payload `{ empresa, produtos[], faqs[] }`. Retorne `{ saved: true }` ou estrutura similar em `data`. |
 | `conectar_wpp` | `inst.qr` | Sem payload. Retorne `{ status, qr_svg? }`. |
