@@ -67,6 +67,8 @@ const TAB_CONFIG = [
   { id: 'ajuda', label: 'Ajuda', icon: 'ajuda' },
 ];
 
+const ONLINE_STATUS_TOKENS = new Set(['conectado', 'connected', 'online', 'on']);
+
 const PERSONA_OPTIONS = [
   { id: 'josi', label: 'Josi', description: 'Acolhedora', accent: '#D81B60', accentRgb: '216, 27, 96', initial: 'J' },
   { id: 'clara', label: 'Clara', description: 'Objetiva', accent: '#5ad7ff', accentRgb: '90, 215, 255', initial: 'C' },
@@ -523,11 +525,16 @@ const renderConexoes = (state) => {
   const isRefreshing = state.pending?.instRefresh;
   const isDisconnecting = state.pending?.instDisconnect;
   const isSaving = state.pending?.instSave;
-  const statusLabel = escapeHTML(instancia.status || 'Desconectado');
-  const normalizedStatus = statusLabel.toLowerCase();
-  const isOnline = ['conectado', 'connected', 'online', 'on'].some((flag) =>
-    normalizedStatus.includes(flag),
-  );
+  const rawStatus = typeof instancia.status === 'string' ? instancia.status.trim() : '';
+  const statusLabel = escapeHTML(rawStatus || 'Desconectado');
+  const normalizedStatus = rawStatus
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .trim();
+  const statusTokens = normalizedStatus ? normalizedStatus.split(/\s+/) : [];
+  const isOnline = statusTokens.some((token) => ONLINE_STATUS_TOKENS.has(token));
   const lastEventRaw = typeof instancia.last_event === 'string' ? instancia.last_event.trim() : '';
   const hasLastEvent = Boolean(lastEventRaw);
   const lastEvent = hasLastEvent
