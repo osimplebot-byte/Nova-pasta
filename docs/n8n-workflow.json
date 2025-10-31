@@ -1,0 +1,806 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "api-backend",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -3840,
+        160
+      ],
+      "id": "a5aabf7b-5a2c-4e0c-8f93-62f36c8d089f",
+      "name": "Webhook Unificado",
+      "webhookId": "omr-studio-unified-webhook"
+    },
+    {
+      "parameters": {
+        "content": "## Fluxo Principal - OMR Backend\n\n### Objetivo\nOrquestrar todas as operações do SPA através de um único endpoint `/webhook/api-backend`.\n\n### Roteamento\n- Autenticação: auth.login, auth.me, auth.logout\n- Dados do negócio: dados.get, dados.save\n- Simulador interno: sim.chat\n- Conexões Evolution: inst.qr, inst.status, inst.refresh, inst.disconnect, inst.update\n- Suporte: support.chat\n- Notificações internas: internal.notify\n\n### Envelope de request\n```json\n{\n  \"action\": \"dados.get\",\n  \"auth\": { \"user_id\": \"uuid\", \"session_token\": \"token\" },\n  \"payload\": { ... }\n}\n```\n\n### Envelope de response\n```json\n{ \"ok\": true, \"data\": { ... }, \"error\": null }\n```",
+        "height": 640,
+        "width": 520,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -4480,
+        -240
+      ],
+      "id": "2d3d1f25-6d81-48a4-8c2f-9b5b7c1eae2f",
+      "name": "Documentacao"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "^auth\\.(login|me|logout)$",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    },
+                    "id": "auth-actions"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "auth"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "^dados\\.(get|save)$",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    },
+                    "id": "dados-actions"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "dados"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "^sim\\.chat$",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    },
+                    "id": "sim-actions"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "sim"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "^inst\\.(qr|status|refresh|disconnect|update)$",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    },
+                    "id": "inst-actions"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "inst"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "^support\\.chat$",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    },
+                    "id": "support-actions"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "support"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "^internal\\.notify$",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    },
+                    "id": "internal-actions"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "internal"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "defaultOutput": 6,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -3520,
+        160
+      ],
+      "id": "2cf168e9-85c1-4c55-bd53-93e4e88fb50d",
+      "name": "Roteador Principal"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "c581939AmsFXCFoO",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/c581939AmsFXCFoO",
+          "cachedResultName": "DBactions"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {}
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -3296,
+        -48
+      ],
+      "id": "7d6a5b8f-6d13-48c5-8b36-1e1b8b826f93",
+      "name": "Modulo Auth"
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -3072,
+        -48
+      ],
+      "id": "5b2d2d6b-6b2d-4ddc-8c8a-0f6df22d46d3",
+      "name": "Resposta Auth"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "c581939AmsFXCFoO",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/c581939AmsFXCFoO",
+          "cachedResultName": "DBactions"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {}
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -3296,
+        128
+      ],
+      "id": "27843208-6508-4213-9066-3811577e66e7",
+      "name": "Modulo Dados"
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -3072,
+        128
+      ],
+      "id": "89eae91c-1a5a-42c5-8d70-f5bba4e8fca6",
+      "name": "Resposta Dados"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "C8HrMfd2jLplQsdj",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/C8HrMfd2jLplQsdj",
+          "cachedResultName": "evolution"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {}
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -3296,
+        320
+      ],
+      "id": "2e4dcf4b-9610-4c1d-aec8-9e5b5e67e4fd",
+      "name": "Modulo Instancias"
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -3072,
+        320
+      ],
+      "id": "df0b1cb3-0ca9-4df0-b5e2-93f2207ec326",
+      "name": "Resposta Instancias"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "replace-with-support-workflow-id",
+          "mode": "id",
+          "cachedResultUrl": "",
+          "cachedResultName": ""
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {}
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -3296,
+        512
+      ],
+      "id": "a3fc2d7a-cf42-42f5-8d20-4473c9c0619c",
+      "name": "Modulo Suporte"
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -3072,
+        512
+      ],
+      "id": "1d352a6d-1839-4b07-8cfa-7adf35192a22",
+      "name": "Resposta Suporte"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "replace-with-internal-workflow-id",
+          "mode": "id",
+          "cachedResultUrl": "",
+          "cachedResultName": ""
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {}
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -3296,
+        704
+      ],
+      "id": "0c7a9232-d8da-41d0-8f63-1d18a8cc5a3f",
+      "name": "Modulo Notificacoes"
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -3072,
+        704
+      ],
+      "id": "b44af0af-6a2d-4c93-9b94-828a8cd0eb47",
+      "name": "Resposta Notificacoes"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "empresas",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "owner_id",
+              "keyValue": "={{ $json.body.auth.user_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -3296,
+        896
+      ],
+      "id": "b3a3c7eb-799c-4cf7-9d20-9c04f5ea5a97",
+      "name": "Consulta Perfil",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "keepOnlySet": false,
+        "values": {
+          "string": [
+            {
+              "name": "user_message",
+              "value": "={{ $node[\"Webhook Unificado\"].json.body.payload.message }}"
+            },
+            {
+              "name": "persona_selected",
+              "value": "={{ $node[\"Webhook Unificado\"].json.body.payload.persona || $json.persona || 'default' }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        -3072,
+        896
+      ],
+      "id": "57f19e27-5a2c-4a5c-8e9b-5d7b90f0b87c",
+      "name": "Contexto Chat"
+    },
+    {
+      "parameters": {
+        "jsCode": "const registro = items[0]?.json || {};\n\nconst empresa = registro.empresa || {\n  nome: registro.nome || 'N/A',\n  tipo: registro.tipo || 'N/A',\n  horario_funcionamento: registro.horario_funcionamento || 'N/A',\n  contatos_extras: registro.contatos_extras || [],\n  endereco: registro.endereco || 'N/A',\n  observacoes: registro.observacoes || '',\n  persona: registro.persona || 'default'\n};\n\nconst produtos = Array.isArray(registro.produtos) ? registro.produtos : [];\nconst faqs = Array.isArray(registro.faqs) ? registro.faqs : [];\n\nconst personaSelecionada = registro.persona_selected || empresa.persona || 'default';\nconst mensagemUsuario = registro.user_message || '';\n\nconst contatosExtras = Array.isArray(empresa.contatos_extras) ? empresa.contatos_extras.join(', ') : empresa.contatos_extras || 'N/A';\n\nlet promptDados = `Empresa: ${empresa.nome}\nSegmento: ${empresa.tipo}\nEndereco: ${empresa.endereco}\nHorario de funcionamento: ${empresa.horario_funcionamento}\nContatos adicionais: ${contatosExtras}\nObservacoes: ${empresa.observacoes || 'Sem observacoes'}\n`;\n\nif (produtos.length > 0) {\n  promptDados += '\nProdutos e servicos:\n';\n  produtos.forEach((produto, index) => {\n    const nome = produto.nome || `Item ${index + 1}`;\n    const preco = produto.preco != null ? produto.preco : 'N/A';\n    const descricao = produto.descricao || 'Sem descricao';\n    promptDados += `- ${nome} (R$ ${preco}): ${descricao}\n`;\n  });\n}\n\nif (faqs.length > 0) {\n  promptDados += '\nPerguntas frequentes:\n';\n  faqs.forEach((faq, index) => {\n    const pergunta = faq.pergunta || `Pergunta ${index + 1}`;\n    const resposta = faq.resposta || 'Sem resposta cadastrada';\n    promptDados += `Q: ${pergunta}\nA: ${resposta}\n`;\n  });\n}\n\nlet personaPrompt = 'Mantenha um tom neutro e prestativo.';\nif (personaSelecionada.toLowerCase() === 'josi') {\n  personaPrompt = 'Você é Josi, receptiva e animada. Responda com entusiasmo e cordialidade, usando ate 3 emojis por mensagem e frases curtas.';\n} else if (personaSelecionada.toLowerCase() === 'clara') {\n  personaPrompt = 'Você é Clara, objetiva e profissional. Responda de forma clara, direta e sem floreios.';\n}\n\nconst systemMessage = `Você é a atendente virtual do estúdio. Oriente clientes com clareza e resolva dúvidas de forma eficiente.\n\n${personaPrompt}\n\nContexto do negócio:\n${promptDados}`.trim();\n\nreturn [\n  {\n    json: {\n      system_message: systemMessage,\n      user_message: mensagemUsuario\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2848,
+        896
+      ],
+      "id": "22ef1d95-7b24-4c21-a60f-2b5d8fc8ecf8",
+      "name": "Preparar Prompt"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.user_message }}",
+        "options": {
+          "systemMessage": "={{ $json.system_message }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -2624,
+        896
+      ],
+      "id": "8e1ef35f-17f0-4337-9d62-3d4f7371a2a1",
+      "name": "Agente Conversacional"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $node[\"Webhook Unificado\"].json.body.auth.user_id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -2496,
+        1120
+      ],
+      "id": "b6a9cce4-83e0-4e9d-9b27-94a07d96002a",
+      "name": "Memoria Conversa"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {
+          "maxTokens": 200,
+          "temperature": 0.7
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -2624,
+        1120
+      ],
+      "id": "d2aefc7a-844e-4cde-9096-e2e72aa48653",
+      "name": "Modelo OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ ({ ok: true, data: { reply: $json.output, usage: $json.extra?.usage ?? null }, error: null }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -2400,
+        912
+      ],
+      "id": "9cfdeead-8e53-4ee6-93a4-3be9ebf8e272",
+      "name": "Resposta Simulador"
+    },
+    {
+      "parameters": {
+        "values": {
+          "boolean": [
+            {
+              "name": "ok",
+              "value": false
+            }
+          ],
+          "string": [
+            {
+              "name": "error.code",
+              "value": "ACTION_NOT_FOUND"
+            },
+            {
+              "name": "error.message",
+              "value": "Ação não suportada pelo fluxo."
+            }
+          ],
+          "options": {}
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        -3296,
+        1088
+      ],
+      "id": "d0e92188-5a9a-4dcd-bfe2-12814eafcef1",
+      "name": "Ação Desconhecida",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -3072,
+        1088
+      ],
+      "id": "2b4b0784-2ecf-4f89-8614-4e7e1d9cfe2c",
+      "name": "Resposta Desconhecida"
+    }
+  ],
+  "connections": {
+    "Webhook Unificado": {
+      "main": [
+        [
+          {
+            "node": "Roteador Principal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Roteador Principal": {
+      "main": [
+        [
+          {
+            "node": "Modulo Auth",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Modulo Dados",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Consulta Perfil",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Modulo Instancias",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Modulo Suporte",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Modulo Notificacoes",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ação Desconhecida",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Modulo Auth": {
+      "main": [
+        [
+          {
+            "node": "Resposta Auth",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Modulo Dados": {
+      "main": [
+        [
+          {
+            "node": "Resposta Dados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Modulo Instancias": {
+      "main": [
+        [
+          {
+            "node": "Resposta Instancias",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Modulo Suporte": {
+      "main": [
+        [
+          {
+            "node": "Resposta Suporte",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Modulo Notificacoes": {
+      "main": [
+        [
+          {
+            "node": "Resposta Notificacoes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consulta Perfil": {
+      "main": [
+        [
+          {
+            "node": "Contexto Chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contexto Chat": {
+      "main": [
+        [
+          {
+            "node": "Preparar Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Prompt": {
+      "main": [
+        [
+          {
+            "node": "Agente Conversacional",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agente Conversacional": {
+      "main": [
+        [
+          {
+            "node": "Resposta Simulador",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Memoria Conversa": {
+      "ai_memory": [
+        [
+          {
+            "node": "Agente Conversacional",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Modelo OpenAI": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agente Conversacional",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ação Desconhecida": {
+      "main": [
+        [
+          {
+            "node": "Resposta Desconhecida",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {
+    "Webhook Unificado": [
+      {
+        "headers": {
+          "host": "omelhorrobo-n8n.cloudfy.live",
+          "user-agent": "Mozilla/5.0",
+          "content-length": "256",
+          "accept": "application/json",
+          "content-type": "application/json"
+        },
+        "params": {},
+        "query": {},
+        "body": {
+          "action": "sim.chat",
+          "auth": {
+            "user_id": "user-uuid",
+            "session_token": "session-token"
+          },
+          "payload": {
+            "persona": "josi",
+            "message": "Olá, gostaria de saber os horários disponíveis."
+          }
+        },
+        "webhookUrl": "https://omelhorrobo-n8n.cloudfy.live/webhook/api-backend",
+        "executionMode": "production"
+      }
+    ]
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}
