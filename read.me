@@ -1,0 +1,386 @@
+OMR Studio — Documento Base do MVP
+
+0) Decisões travadas (sem chororô)
+	•	App: SPA.
+	•	Navegação: tabs inferiores (Dados, Test-Drive, Conexões, Ajuda).
+	•	Onboarding: mini-tour de 3 passos.
+	•	Tema: claro/escuro com toggle, salva em localStorage.
+	•	Simulador: motor real (N8N + LLM), sem persistir histórico.
+	•	Sugestões no chat: fixas no MVP.
+	•	Conexões: 1 instância de WhatsApp por conta.
+	•	Suporte: fluxo separado (“Suporte OMR”). Sem histórico no MVP.
+	•	Backend: endpoint único /webhook/api-backend (N8N roteia por action).
+	•	Front → N8N: fetch direto. Resposta sempre JSON.
+	•	Supabase: você me deu carta branca → schema abaixo.
+	•	Notificações internas: POST webhook (N8N reencaminha pra onde quiser).
+
+⸻
+
+1) Arquitetura (macro)
+
+Frontend (Vanilla JS + Tailwind + Alpine opcional)
+	•	SPA simples: um HTML, 4 views renderizadas por JS.
+	•	Estado global mínimo em window.state (user, empresa, instância, tema).
+	•	Comunicação via api.post('/webhook/api-backend', { action, payload }).
+
+N8N (orquestrador)
+	•	Um Webhook único POST /webhook/api-backend.
+	•	Switch por body.action → nodes específicos.
+	•	Integra Evolution API e Supabase (via HTTP/JS).
+
+Supabase
+	•	Auth por e-mail/senha (MVP). Social pode entrar depois.
+	•	Tabelas enxutas (abaixo). RLS “o que é meu é meu”.
+
+⸻
+
+2) Design System (enxuto e elegante)
+
+Fonts: Inter (UI), Montserrat (destaques).
+Rosa principal (suave como pediu): #D81B60
+	•	Hover/ativo (darken): #C2185B
+	•	Claro de apoio: #FCE4EC
+	•	Cinzas (Light): #0F172A (texto), #64748B (muted), #E2E8F0 (borda)
+	•	Cinzas (Dark): #F1F5F9 (texto), #94A3B8 (muted), #334155 (borda)
+	•	Sucesso/Erro: #22C55E / #EF4444
+
+Feedbacks obrigatórios
+	•	Loader inline em botões.
+	•	Toasts: sucesso/erro neutros (3s).
+	•	Form: validação simples e mensagem curta.
+
+⸻
+
+3) Navegação / Fluxo de telas
+
+Tabs inferiores:
+	•	Dados | Test-Drive | Conexões | Ajuda
+
+Onboarding (primeiro login):
+	1.	“Preencha Dados do negócio.”
+	2.	“Teste na aba Test-Drive.”
+	3.	“Conecte na aba Conexões.”
+
+⸻
+
+4) Especificação de cada aba
+
+4.1 Dados (form de configuração)
+
+Campos:
+	•	empresa_nome (obrigatório)
+	•	empresa_tipo (texto curto)
+	•	horario_funcionamento (texto)
+	•	contatos_extras (texto)
+	•	endereco (texto)
+	•	observacoes (textarea)
+	•	Personalidade: persona ∈ {josi, clara}
+	•	Produtos (lista):
+	•	nome (obrigatório)
+	•	descricao (opcional, curta)
+	•	preco (numérico/texto)
+	•	FAQs (lista):
+	•	pergunta (obrigatória)
+	•	resposta (obrigatória)
+
+Ações:
+	•	Salvar: envia Supabase e dispara atualização no N8N se instância conectada.
+	•	Sem autosave.
+
+4.2 Test-Drive (simulador real)
+	•	Usa motor real via N8N (mesmo prompt que o WhatsApp).
+	•	Histórico somente em memória (limpa ao recarregar).
+	•	Sugestões fixas (MVP) configuradas no front.
+	•	Troca de persona no topo (Josi/Clara), sem precisar salvar.
+
+4.3 Conexões (Evolution API)
+
+Cards:
+	•	Status: Desconectado / Conectando / Conectado.
+	•	QR inline quando necessário.
+	•	Controles:
+	•	rejeitar_chamadas (on/off)
+	•	ignorar_grupos (on/off)
+	•	sempre_online (on/off)
+	•	ler_mensagens (on/off)
+	•	sincronizar_historico (on/off)
+	•	Mensagem para chamadas rejeitadas (input).
+	•	Mini-log de eventos (lista rolável).
+	•	Botões:
+	•	“Atualizar conexão” → refaz handshake/QR.
+	•	“Desconectar”
+	•	“Salvar configurações de instância”
+
+Atualização de status: polling 5s (MVP).
+Lógica: tudo via POST no endpoint unificado. O front só exibe o JSON de retorno.
+
+4.4 Ajuda (Suporte OMR)
+	•	Chat simples com persona “Suporte OMR”.
+	•	Se detectar necessidade humana → retorno JSON com instrução de contato (seu webhook decide WhatsApp/e-mail).
+	•	Sem histórico persistido no MVP.
+
+⸻
+
+5) Contrato de API (único, limpo e consistente)
+
+Endpoint: POST /webhook/api-backend
+Headers: Content-Type: application/json
+Request base:
+
+{
+  "action": "string",
+  "auth": { "user_id": "uuid", "session_token": "string" },
+  "payload": { }
+}
+
+Response base:
+
+{
+  "ok": true,
+  "data": {},
+  "error": null,
+  "meta": { "ts": 1730332800 }
+}
+
+Erros:
+
+{ "ok": false, "error": { "code": "INVALID_INPUT", "message": "..." }, "data": null }
+
+Ações suportadas (MVP)
+
+Auth
+	•	auth.login → payload { email, password } → data { user_id, session_token }
+	•	auth.me → valida sessão → data { user, empresa, instancias }
+	•	auth.logout → invalida sessão
+
+Dados
+	•	dados.get → data { empresa, produtos[], faqs[] }
+	•	dados.save → payload { empresa, produtos[], faqs[], persona } → data { saved: true }
+	•	Se houver instância conectada, N8N atualiza o contexto do agente.
+
+Test-Drive
+	•	sim.chat → payload { persona, message, context? } → data { reply, usage }
+
+Conexões
+	•	inst.qr → data { status, qr_svg? }
+	•	inst.status → data { status, battery?, platform?, last_event? }
+	•	inst.update → payload { rejeitar_chamadas, ignorar_grupos, sempre_online, ler_mensagens, sincronizar_historico, mensagem_rejeicao } → data { saved: true }
+	•	inst.refresh → refaz handshake/QR → data { status, qr_svg? }
+	•	inst.disconnect → data { disconnected: true }
+
+Suporte
+	•	support.chat → payload { message } → data { reply, escalate?: { type: "whatsapp"|"email", target: "..." } }
+
+Notificações internas
+	•	internal.notify → payload { type, details } → data { delivered: true }
+	•	N8N faz POST no webhook que você definir.
+
+⸻
+
+6) Supabase — Schema do MVP (sem frescura)
+
+Tabelas
+
+usuarios
+	•	id (uuid, PK)
+	•	email (text, unique)
+	•	password_hash (text) — se usar Supabase Auth, delega
+	•	created_at (timestamptz)
+
+empresas
+	•	id (uuid, PK)
+	•	user_id (uuid, FK → usuarios.id)
+	•	nome (text)
+	•	tipo (text)
+	•	horario_funcionamento (text)
+	•	contatos_extras (text)
+	•	endereco (text)
+	•	observacoes (text)
+	•	persona (text, default josi)
+	•	created_at / updated_at (timestamptz)
+
+produtos
+	•	id (uuid, PK)
+	•	empresa_id (uuid, FK → empresas.id)
+	•	nome (text, not null)
+	•	descricao (text)
+	•	preco (numeric(12,2))
+	•	created_at / updated_at
+
+faqs
+	•	id (uuid, PK)
+	•	empresa_id (uuid, FK)
+	•	pergunta (text, not null)
+	•	resposta (text, not null)
+	•	created_at / updated_at
+
+instancias
+	•	id (uuid, PK)
+	•	empresa_id (uuid, FK)
+	•	evolution_instance_id (text, unique)
+	•	status (text) — desconectado|conectando|conectado|erro
+	•	settings (jsonb) — switches e mensagem de rejeição
+	•	last_event (jsonb)
+	•	created_at / updated_at
+
+RLS: cada linha pertence ao user_id dono da empresa_id. Ponto.
+
+(Logs de chat e tickets ficam fora no MVP, como você pediu.)
+
+⸻
+
+7) N8N — Roteamento por action (mapa rápido)
+
+Webhook Único (/webhook/api-backend)
+  → Switch (body.action)
+    - auth.*         → Nodes de Auth (Supabase Auth)
+    - dados.get      → Select em empresas/produtos/faqs
+    - dados.save     → Upserts + if (instância conectada) → update contexto agente
+    - sim.chat       → Compose prompt (com dados empresa) → LLM → return JSON
+    - inst.qr        → Evolution: gerar QR → return svg
+    - inst.status    → Evolution: status → return JSON
+    - inst.update    → Save settings + Evolution apply (se aplicável)
+    - inst.refresh   → Evolution: restart/qr
+    - inst.disconnect→ Evolution: logout
+    - support.chat   → Agente “Suporte OMR” → heurística para `escalate`
+    - internal.notify→ HTTP Request para webhook que você definir
+
+Prompt do agente (MVP):
+	•	Persona josi ou clara
+	•	Contexto: empresa, produtos, faqs, observações, horário
+	•	Regras: não confirmar agendamento, não receber Pix, linguagem condizente, etc.
+
+⸻
+
+8) Estrutura de arquivos (front)
+
+/frontend
+  index.html           # shell SPA + tabs inferiores
+  /src
+    app.js            # boot, state, router/tab switch, theme
+    ui.js             # render das 4 abas + componentes (toast, modal, loaders)
+    api.js            # client do endpoint unificado (post(action, payload))
+    styles.css        # tokens, temas (light/dark), utilidades
+    assets/
+      logo.svg
+      icons.svg
+
+Padrões de código
+	•	Sempre chamar api.post(action, payload) → retorna { ok, data, error }.
+	•	Qualquer erro → toast.error(message) e botão volta a habilitar.
+	•	Inputs com required só onde faz sentido (nome da empresa, por exemplo).
+
+⸻
+
+9) Estados & UX (detalhes que evitam suporte depois)
+	•	Tema: localStorage.theme = 'dark'|'light'.
+	•	Sessão: guarda session_token e user_id em localStorage (MVP).
+	•	Abas: guarda última aba aberta.
+	•	Conexões: polling 5s, para quando status === 'conectado' e a aba perde foco.
+	•	Toasts: sucesso ao salvar dados, erro genérico “Tenta novamente em instantes”.
+
+⸻
+
+10) Test checklist (antes de chamar de MVP)
+	•	Criar conta → login → onboarding visível.
+	•	Salvar Dados com e sem produtos/FAQ.
+	•	Test-Drive responde coerente com dados.
+	•	Conexões: mostra QR, muda status, salva switches, log aparece.
+	•	Ajuda responde e, quando for caso, retorna escalate.
+	•	Tema troca e persiste.
+	•	Mobile: 360px largura sem quebrar nada.
+
+⸻
+
+11) Roadmap curto (depois do MVP, sem viagem)
+	1.	Sugestões do Test-Drive baseadas nas FAQs.
+	2.	WebSocket para status da instância.
+	3.	Logs básicos de conversa (últimos 20).
+	4.	Social login (Google/Apple).
+	5.	Multiusuário por empresa.
+	6.	Histórico de tickets de suporte.
+
+⸻
+
+12) Exemplos de payload (pra ninguém inventar moda)
+
+Salvar dados
+
+{
+  "action": "dados.save",
+  "auth": { "user_id": "UUID", "session_token": "token" },
+  "payload": {
+    "empresa": {
+      "nome": "Minha Empresa",
+      "tipo": "Cafeteria",
+      "horario_funcionamento": "Seg-Sex 09:00-18:00",
+      "contatos_extras": "@cafeteria (11)98765-4321",
+      "endereco": "Rua das Flores, 123 - Centro",
+      "observacoes": "Falar de promo do dia",
+      "persona": "josi"
+    },
+    "produtos": [
+      { "nome": "Café Latte", "descricao": "200ml", "preco": 12.90 }
+    ],
+    "faqs": [
+      { "pergunta": "Tem delivery?", "resposta": "Sim, via iFood." }
+    ]
+  }
+}
+
+Chat do simulador
+
+{
+  "action": "sim.chat",
+  "auth": { "user_id": "UUID", "session_token": "token" },
+  "payload": { "persona": "clara", "message": "Quais produtos vocês oferecem?" }
+}
+
+Status da instância
+
+{ "action": "inst.status", "auth": { "user_id": "UUID", "session_token": "token" }, "payload": {} }
+
+Atualizar conexão
+
+{ "action": "inst.refresh", "auth": { "user_id": "UUID", "session_token": "token" }, "payload": {} }
+
+Salvar switches
+
+{
+  "action": "inst.update",
+  "auth": { "user_id": "UUID", "session_token": "token" },
+  "payload": {
+    "rejeitar_chamadas": true,
+    "ignorar_grupos": true,
+    "sempre_online": false,
+    "ler_mensagens": true,
+    "sincronizar_historico": false,
+    "mensagem_rejeicao": "No momento não aceitamos chamadas. Envie uma mensagem."
+  }
+}
+
+Notificação interna
+
+{
+  "action": "internal.notify",
+  "payload": { "type": "new_account", "details": { "email": "x@x.com" } }
+}
+
+
+⸻
+
+13) Segurança mínima (sem paranoia, sem burrice)
+	•	Nunca expor service_role do Supabase no front.
+	•	JWT/sessão simples no MVP, mas invalidar no logout.
+	•	Validar user_id ↔ empresa_id no N8N antes de tocar em qualquer dado.
+	•	Sanitizar mensagem do usuário antes de injetar no prompt (regex básico).
+
+
+
+14) Utilitarios do build e responsividade
+ - Breakpoints centralizados em src/constants.js via BREAKPOINTS (sm/md/lg/xl/2xl).
+ - App.js usa debounce em resize/scroll para atualizar data-breakpoint/data-viewport no html.
+ - Touch targets minimos garantidos (44px) em btn-primary, toggle-chip, icon-button, icon-toggle e tabs.
+ - Script de compressao: node scripts/compress-assets.mjs gera dist/compressed com .gz/.br dos assets.
+ - Antes de liberar versao: testar em dispositivos fisicos, validar gestos touch e simular rede lenta no Chrome DevTools.
+
