@@ -31,6 +31,16 @@ const icon = (name, classes = '') => {
   }
 };
 
+const renderSpinner = (size = 'md') =>
+  `<span class="spinner spinner-${size}" role="status" aria-hidden="true"></span>`;
+
+const createChatMessageEntry = (author, role, message) => ({
+  id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+  author,
+  role,
+  message,
+});
+
 const TAB_CONFIG = [
   { id: 'dados', label: 'Dados', icon: 'dados' },
   { id: 'test-drive', label: 'Test-Drive', icon: 'test-drive' },
@@ -92,6 +102,8 @@ export const render = (state) => {
 
 const renderLogin = (state) => {
   const themeIcon = state.theme === 'light' ? '☾' : '☀';
+  const isSubmitting = state.pending?.login;
+  const loginEmail = state.forms?.login?.email || '';
 
   return `
   <main class="app-shell items-center justify-center bg-bg px-4 py-20 text-text">
@@ -110,14 +122,20 @@ const renderLogin = (state) => {
         <form id="login-form" class="space-y-6">
           <label class="block space-y-2 text-sm text-text">
             <span class="font-medium">Email</span>
-            <input class="input-field w-full" type="email" id="login-email" required placeholder="voce@escola.com" autocomplete="email" />
+            <input class="input-field w-full" type="email" id="login-email" required placeholder="voce@escola.com" autocomplete="email" value="${loginEmail}" />
           </label>
           <label class="block space-y-2 text-sm text-text">
             <span class="font-medium">Senha</span>
             <input class="input-field w-full" type="password" id="login-password" required placeholder="********" autocomplete="current-password" />
           </label>
-          <button id="login-submit" class="btn-primary w-full px-4 py-3 text-sm font-semibold uppercase tracking-[0.24em]" type="submit">
-            Entrar
+          <button
+            id="login-submit"
+            class="btn-primary w-full px-4 py-3 text-sm font-semibold uppercase tracking-[0.24em] ${isSubmitting ? 'btn-loading' : ''}"
+            type="submit"
+            ${isSubmitting ? 'disabled' : ''}
+          >
+            ${isSubmitting ? renderSpinner('sm') : ''}
+            <span class="btn-label">Entrar</span>
           </button>
           <p class="space-y-1 text-center text-xs text-text-muted">
             <span class="block">
@@ -216,11 +234,11 @@ const renderView = (state) => {
     case 'dados':
       return renderDados(state);
     case 'test-drive':
-      return renderTestDrive();
+      return renderTestDrive(state);
     case 'conexoes':
       return renderConexoes(state);
     case 'ajuda':
-      return renderAjuda();
+      return renderAjuda(state);
     default:
       return `<section class="neon-card p-8 text-text">View em construcao.</section>`;
   }
@@ -253,8 +271,14 @@ const renderAppHeader = (state) => {
 };
 
 const renderDados = (state) => {
-  const empresa = state.empresa || {};
-  const persona = empresa.persona || 'josi';
+  const draft = state.forms?.dados;
+  const empresaBase = state.empresa || {};
+  const empresaForm = draft?.empresa ? { ...empresaBase, ...draft.empresa } : empresaBase;
+  const persona = empresaForm.persona || 'josi';
+  const produtos = draft?.produtos ?? empresaBase.produtos ?? [];
+  const faqs = draft?.faqs ?? empresaBase.faqs ?? [];
+  const lastSync = empresaBase?.updated_at || null;
+  const isSaving = state.pending?.dadosSave;
 
   return `
     <section class="space-y-6">
@@ -265,12 +289,12 @@ const renderDados = (state) => {
 
       <form id="dados-form" class="neon-card space-y-6 px-6 py-7">
         <div class="grid gap-4">
-          ${renderTextField('empresa_nome', 'Nome da empresa', empresa.nome, true)}
-          ${renderTextField('empresa_tipo', 'Tipo de negocio', empresa.tipo)}
-          ${renderTextField('horario_funcionamento', 'Horario de funcionamento', empresa.horario_funcionamento)}
-          ${renderTextField('contatos_extras', 'Contatos extras', empresa.contatos_extras)}
-          ${renderTextField('endereco', 'Endereco', empresa.endereco)}
-          ${renderTextArea('observacoes', 'Observacoes', empresa.observacoes)}
+          ${renderTextField('empresa_nome', 'Nome da empresa', empresaForm.nome, true)}
+          ${renderTextField('empresa_tipo', 'Tipo de negocio', empresaForm.tipo)}
+          ${renderTextField('horario_funcionamento', 'Horario de funcionamento', empresaForm.horario_funcionamento)}
+          ${renderTextField('contatos_extras', 'Contatos extras', empresaForm.contatos_extras)}
+          ${renderTextField('endereco', 'Endereco', empresaForm.endereco)}
+          ${renderTextArea('observacoes', 'Observacoes', empresaForm.observacoes)}
         </div>
 
         <div class="space-y-2">
@@ -299,7 +323,7 @@ const renderDados = (state) => {
             <p class="text-xs text-text-muted">Liste produtos ou servicos oferecidos.</p>
           </header>
           <div id="produtos-list" class="space-y-3">
-            ${(empresa.produtos || []).map((produto, index) => renderProdutoCard(index, produto)).join('')}
+            ${produtos.map((produto, index) => renderProdutoCard(index, produto)).join('')}
           </div>
           <button id="add-produto" type="button" class="toggle-chip text-sm">+ Adicionar produto</button>
         </section>
@@ -310,7 +334,7 @@ const renderDados = (state) => {
             <p class="text-xs text-text-muted">Questoes frequentes para o bot.</p>
           </header>
           <div id="faqs-list" class="space-y-3">
-            ${(empresa.faqs || []).map((faq, index) => renderFaqCard(index, faq)).join('')}
+            ${faqs.map((faq, index) => renderFaqCard(index, faq)).join('')}
           </div>
           <button id="add-faq" type="button" class="toggle-chip text-sm">+ Adicionar FAQ</button>
         </section>
@@ -324,9 +348,16 @@ const renderDados = (state) => {
         </div>
 
         <div class="flex items-center justify-between text-xs text-text-muted">
-          <span>Ultima sincronizacao: ${empresa.updated_at ? new Date(empresa.updated_at).toLocaleString('pt-BR') : 'nunca'}</span>
-          <button type="submit" class="btn-primary px-6 py-3 text-sm font-semibold uppercase tracking-[0.18em]">
-            Salvar
+          <span>Ultima sincronizacao: ${
+            lastSync ? new Date(lastSync).toLocaleString('pt-BR') : 'nunca'
+          }</span>
+          <button
+            type="submit"
+            class="btn-primary px-6 py-3 text-sm font-semibold uppercase tracking-[0.18em] ${isSaving ? 'btn-loading' : ''}"
+            ${isSaving ? 'disabled' : ''}
+          >
+            ${isSaving ? renderSpinner('sm') : ''}
+            <span class="btn-label">Salvar</span>
           </button>
         </div>
       </form>
@@ -334,47 +365,79 @@ const renderDados = (state) => {
   `;
 };
 
-const renderTestDrive = () => `
-  <section class="space-y-4">
-    <header class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-      <div>
-        <h3 class="text-lg font-semibold text-text">Simulador</h3>
-        <p class="text-sm text-text-muted">Converse com o agente usando dados reais ou demo.</p>
-      </div>
-      <div class="flex items-center gap-2">
-        <select id="persona-toggle" class="input-field text-sm">
-          <option value="josi">Josi</option>
-          <option value="clara">Clara</option>
-        </select>
-        <button id="toggle-demo" class="toggle-chip text-xs">Dados demo</button>
-      </div>
-    </header>
+const renderTestDrive = (state) => {
+  const isSending = state.pending?.chatSend;
+  const messages = state.chat?.messages ?? [];
+  const personaValue = state.forms?.chatPersona || 'josi';
+  const lastMessageId = messages.length ? messages[messages.length - 1].id : '';
 
-    <section class="neon-card flex flex-col gap-4 px-6 py-6">
-      <div id="chat-log" class="glass-panel flex max-h-[360px] flex-col gap-3 overflow-y-auto px-4 py-4 text-sm text-text">
-        <p class="text-text-muted">Nenhuma mensagem ainda. Envie algo para comecar.</p>
-      </div>
-      <div class="flex flex-col gap-3">
-        <div class="flex flex-wrap gap-2 text-xs">
-          ${['Quais produtos voces oferecem?', 'Qual o horario de atendimento?', 'Existe suporte humano?']
+  return `
+    <section class="space-y-4">
+      <header class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h3 class="text-lg font-semibold text-text">Simulador</h3>
+          <p class="text-sm text-text-muted">Converse com o agente usando dados reais ou demo.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <select id="persona-toggle" class="input-field text-sm" ${isSending ? 'disabled' : ''}>
+            <option value="josi" ${personaValue === 'josi' ? 'selected' : ''}>Josi</option>
+            <option value="clara" ${personaValue === 'clara' ? 'selected' : ''}>Clara</option>
+          </select>
+          <button id="toggle-demo" class="toggle-chip text-xs">Dados demo</button>
+        </div>
+      </header>
+
+      <section class="neon-card flex flex-col gap-4 px-6 py-6">
+        <div
+          id="chat-log"
+          class="glass-panel flex max-h-[360px] flex-col gap-3 overflow-y-auto px-4 py-4 text-sm text-text"
+          data-last-message="${lastMessageId}"
+          data-has-messages="${messages.length > 0}"
+        >
+          ${
+            messages.length
+              ? messages.map((entry) => renderChatBubble(entry)).join('')
+              : '<p class="text-text-muted">Nenhuma mensagem ainda. Envie algo para comecar.</p>'
+          }
+        </div>
+        <div class="flex flex-col gap-3">
+          <div class="flex flex-wrap gap-2 text-xs">
+            ${['Quais produtos voces oferecem?', 'Qual o horario de atendimento?', 'Existe suporte humano?']
                 .map((suggestion) => `
                   <button class="toggle-chip text-xs" data-suggestion="${suggestion}">
                     ${suggestion}
                   </button>
                 `)
                 .join('')}
-            </div>
-            <form id="chat-form" class="flex gap-2">
-              <input id="chat-input" class="input-field flex-1 text-sm" placeholder="Digite uma mensagem..." />
-              <button type="submit" class="btn-primary px-5 py-3 text-sm font-semibold uppercase tracking-[0.18em]">Enviar</button>
-            </form>
           </div>
-        </section>
+          <form id="chat-form" class="flex gap-2">
+            <input id="chat-input" class="input-field flex-1 text-sm" placeholder="Digite uma mensagem..." ${
+              isSending ? 'disabled' : ''
+            } />
+            <button
+              type="submit"
+              class="btn-primary px-5 py-3 text-sm font-semibold uppercase tracking-[0.18em] ${
+                isSending ? 'btn-loading' : ''
+              }"
+              ${isSending ? 'disabled' : ''}
+            >
+              ${isSending ? renderSpinner('sm') : ''}
+              <span class="btn-label">Enviar</span>
+            </button>
+          </form>
+        </div>
       </section>
-    `;
+    </section>
+  `;
+};
 
 const renderConexoes = (state) => {
-  const instancia = state.instancias?.[0] || {};
+  const instDraft = state.forms?.instancias;
+  const instanciaBase = state.instancias?.[0] || {};
+  const instancia = instDraft ? { ...instanciaBase, ...instDraft } : instanciaBase;
+  const isRefreshing = state.pending?.instRefresh;
+  const isDisconnecting = state.pending?.instDisconnect;
+  const isSaving = state.pending?.instSave;
 
   return `
     <section class="space-y-6">
@@ -409,9 +472,34 @@ const renderConexoes = (state) => {
         </div>
 
         <div class="flex flex-wrap gap-2">
-          <button id="inst-refresh" class="btn-primary px-5 py-3 text-sm font-semibold uppercase tracking-[0.18em]">Atualizar conexao</button>
-          <button id="inst-disconnect" class="toggle-chip text-sm" type="button">Desconectar</button>
-          <button id="inst-save" class="toggle-chip text-sm" type="button">Salvar configuracoes</button>
+          <button
+            id="inst-refresh"
+            class="btn-primary px-5 py-3 text-sm font-semibold uppercase tracking-[0.18em] ${
+              isRefreshing ? 'btn-loading' : ''
+            }"
+            ${isRefreshing ? 'disabled' : ''}
+          >
+            ${isRefreshing ? renderSpinner('sm') : ''}
+            <span class="btn-label">Atualizar conexao</span>
+          </button>
+          <button
+            id="inst-disconnect"
+            class="toggle-chip text-sm ${isDisconnecting ? 'btn-loading' : ''}"
+            type="button"
+            ${isDisconnecting ? 'disabled' : ''}
+          >
+            ${isDisconnecting ? renderSpinner('sm') : ''}
+            <span class="btn-label">Desconectar</span>
+          </button>
+          <button
+            id="inst-save"
+            class="toggle-chip text-sm ${isSaving ? 'btn-loading' : ''}"
+            type="button"
+            ${isSaving ? 'disabled' : ''}
+          >
+            ${isSaving ? renderSpinner('sm') : ''}
+            <span class="btn-label">Salvar configuracoes</span>
+          </button>
         </div>
       </section>
 
@@ -427,32 +515,46 @@ const renderConexoes = (state) => {
   `;
 };
 
-const renderAjuda = () => `
-  <section class="space-y-6">
-    <header class="space-y-1">
-      <h3 class="text-lg font-semibold text-text">Suporte OMR</h3>
-      <p class="text-sm text-text-muted">Consulte a base rapida ou acione a equipe humana.</p>
-    </header>
+const renderAjuda = (state) => {
+  const supportDraft = state.forms?.support || '';
+  const isSending = state.pending?.supportSend;
 
-    <section class="neon-card space-y-4 px-6 py-6">
-      <div class="space-y-3">
-        <h4 class="text-sm font-semibold text-text">Links uteis</h4>
-        <ul class="space-y-2 text-sm text-text-muted">
-          <li><a class="text-primary underline" href="https://docs.omrstudio.dev/base" target="_blank" rel="noopener">Documento base</a></li>
-          <li><a class="text-primary underline" href="mailto:suporte@omrstudio.dev" target="_blank" rel="noopener">Contato por e-mail</a></li>
-        </ul>
-      </div>
+  return `
+    <section class="space-y-6">
+      <header class="space-y-1">
+        <h3 class="text-lg font-semibold text-text">Suporte OMR</h3>
+        <p class="text-sm text-text-muted">Consulte a base rapida ou acione a equipe humana.</p>
+      </header>
 
-      <form id="support-form" class="space-y-3">
-        <label class="text-sm font-medium text-text" for="support-message">Enviar mensagem</label>
-        <textarea id="support-message" class="input-field h-32 w-full text-sm" placeholder="Explique o ocorrido..."></textarea>
-        <button type="submit" class="btn-primary px-5 py-3 text-sm font-semibold uppercase tracking-[0.18em]">
-          Enviar
-        </button>
-      </form>
+      <section class="neon-card space-y-4 px-6 py-6">
+        <div class="space-y-3">
+          <h4 class="text-sm font-semibold text-text">Links uteis</h4>
+          <ul class="space-y-2 text-sm text-text-muted">
+            <li><a class="text-primary underline" href="https://docs.omrstudio.dev/base" target="_blank" rel="noopener">Documento base</a></li>
+            <li><a class="text-primary underline" href="mailto:suporte@omrstudio.dev" target="_blank" rel="noopener">Contato por e-mail</a></li>
+          </ul>
+        </div>
+
+        <form id="support-form" class="space-y-3">
+          <label class="text-sm font-medium text-text" for="support-message">Enviar mensagem</label>
+          <textarea id="support-message" class="input-field h-32 w-full text-sm" placeholder="Explique o ocorrido...">${
+            supportDraft
+          }</textarea>
+          <button
+            type="submit"
+            class="btn-primary px-5 py-3 text-sm font-semibold uppercase tracking-[0.18em] ${
+              isSending ? 'btn-loading' : ''
+            }"
+            ${isSending ? 'disabled' : ''}
+          >
+            ${isSending ? renderSpinner('sm') : ''}
+            <span class="btn-label">Enviar</span>
+          </button>
+        </form>
+      </section>
     </section>
-  </section>
-`;
+  `;
+};
 
 const renderToastContainer = (state) => `
   <div class="pointer-events-none fixed inset-x-4 bottom-4 z-50 flex flex-col items-center space-y-2 sm:items-end sm:space-y-3" data-toast-container>
@@ -527,6 +629,17 @@ const renderToggle = (name, label, checked) => `
   </label>
 `;
 
+const renderChatBubble = (message) => {
+  const alignment = message.role === 'user' ? 'self-end text-right' : 'self-start text-left';
+  const author = message.author || (message.role === 'user' ? 'Voce' : 'Agente');
+  return `
+    <div class="glass-panel chat-bubble flex flex-col gap-1 px-4 py-3 text-sm ${alignment}" data-chat-message="${message.id}">
+      <span class="text-xs font-semibold text-primary">${author}</span>
+      <p class="whitespace-pre-line text-text">${message.message}</p>
+    </div>
+  `;
+};
+
 const formatLog = (log) => {
   if (typeof log === 'string') return log;
   const timestamp = log.ts ? new Date(log.ts).toLocaleTimeString('pt-BR') : '';
@@ -537,7 +650,6 @@ const bindLoginView = () => {
   bindThemeSwitchers();
 
   const form = document.getElementById('login-form');
-  const submit = document.getElementById('login-submit');
 
   form?.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -550,11 +662,13 @@ const bindLoginView = () => {
       return;
     }
 
-    const previousLabel = submit?.textContent || 'Entrar';
-    if (submit) {
-      submit.disabled = true;
-      submit.textContent = 'Conectando...';
-    }
+    setState(
+      (prev) => ({
+        pending: { ...prev.pending, login: true },
+        forms: { ...prev.forms, login: { ...prev.forms?.login, email } },
+      }),
+      'pending:login:start',
+    );
 
     try {
       const { data } = await api.post('auth.login', { email, password }, { auth: false });
@@ -563,10 +677,12 @@ const bindLoginView = () => {
       console.error('[OMR:UI] auth.login falhou', error);
       showToast(error?.message || 'Falha ao autenticar. Confira as credenciais.', 'error');
     } finally {
-      if (submit && document.body.contains(submit)) {
-        submit.disabled = false;
-        submit.textContent = previousLabel;
-      }
+      setState(
+        (prev) => ({
+          pending: { ...prev.pending, login: false },
+        }),
+        'pending:login:finish',
+      );
     }
   });
 
@@ -617,7 +733,22 @@ const bindLogout = () => {
     } catch (error) {
       console.info('[OMR:UI] auth.logout skipped', error);
     } finally {
-      setState({ auth: { user: null, sessionToken: null }, currentView: 'login' }, 'logout:manual');
+      setState(
+        (prev) => ({
+          auth: { user: null, sessionToken: null },
+          currentView: 'login',
+          forms: {
+            ...prev.forms,
+            login: { email: '' },
+            dados: null,
+            instancias: null,
+            support: '',
+            chatPersona: 'josi',
+          },
+          chat: { messages: [] },
+        }),
+        'logout:manual',
+      );
       showToast('Sessao encerrada.');
     }
   });
@@ -762,11 +893,38 @@ const bindDadosForm = () => {
       payload.faqs.push({ pergunta, resposta });
     });
 
+    setState(
+      (prev) => ({
+        pending: { ...prev.pending, dadosSave: true },
+        forms: { ...prev.forms, dados: payload },
+      }),
+      'pending:dados-save:start',
+    );
+
     try {
       await api.post('dados.save', payload);
+      setState(
+        (prev) => ({
+          pending: { ...prev.pending, dadosSave: false },
+          empresa: {
+            ...prev.empresa,
+            ...payload.empresa,
+            produtos: payload.produtos,
+            faqs: payload.faqs,
+          },
+          forms: { ...prev.forms, dados: null },
+        }),
+        'dados:update',
+      );
       showToast('Dados salvos com sucesso.');
-      setState({ empresa: { ...payload.empresa, produtos: payload.produtos, faqs: payload.faqs } }, 'dados:update');
     } catch (error) {
+      setState(
+        (prev) => ({
+          pending: { ...prev.pending, dadosSave: false },
+          forms: { ...prev.forms, dados: payload },
+        }),
+        'pending:dados-save:error',
+      );
       showToast(error?.message || 'Erro ao salvar dados.', 'error');
     }
   });
@@ -780,42 +938,83 @@ const bindChat = () => {
   const log = document.getElementById('chat-log');
   const personaSelect = document.getElementById('persona-toggle');
 
+  personaSelect?.addEventListener('change', () => {
+    const value = personaSelect.value || 'josi';
+    setState(
+      (prev) => ({
+        forms: { ...prev.forms, chatPersona: value },
+      }),
+      'chat:persona',
+    );
+  });
+
+  if (log?.dataset.hasMessages === 'true') {
+    requestAnimationFrame(() => {
+      if (!log) return;
+      log.scrollTop = log.scrollHeight;
+    });
+  }
+
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     const message = input?.value.trim();
     if (!message) return;
 
-    appendChatMessage(log, 'Voce', message);
     input.value = '';
+
+    const persona = personaSelect?.value || 'josi';
+    const userEntry = createChatMessageEntry('Voce', 'user', message);
+
+    setState(
+      (prev) => ({
+        pending: { ...prev.pending, chatSend: true },
+        chat: {
+          ...prev.chat,
+          messages: [...(prev.chat?.messages ?? []), userEntry],
+        },
+      }),
+      'chat:send:start',
+    );
 
     try {
       const { data } = await api.post('sim.chat', {
-        persona: personaSelect?.value || 'josi',
+        persona,
         message,
       });
 
-      appendChatMessage(log, 'Agente', data?.reply || 'Sem resposta.');
+      const replyEntry = createChatMessageEntry('Agente', 'agent', data?.reply || 'Sem resposta.');
+      setState(
+        (prev) => ({
+          pending: { ...prev.pending, chatSend: false },
+          chat: {
+            ...prev.chat,
+            messages: [...(prev.chat?.messages ?? []), replyEntry],
+          },
+        }),
+        'chat:send:success',
+      );
     } catch (error) {
-      appendChatMessage(log, 'Agente', error?.message || 'Falha ao processar.');
+      const errorEntry = createChatMessageEntry('Agente', 'agent', error?.message || 'Falha ao processar.');
+      setState(
+        (prev) => ({
+          pending: { ...prev.pending, chatSend: false },
+          chat: {
+            ...prev.chat,
+            messages: [...(prev.chat?.messages ?? []), errorEntry],
+          },
+        }),
+        'chat:send:error',
+      );
     }
   });
 
   document.querySelectorAll('[data-suggestion]').forEach((button) => {
     button.addEventListener('click', () => {
-      if (!input) return;
+      if (!input || input.disabled) return;
       input.value = button.getAttribute('data-suggestion') || '';
       input.focus();
     });
   });
-};
-
-const appendChatMessage = (log, author, message) => {
-  if (!log) return;
-  const bubble = document.createElement('div');
-  bubble.className = `glass-panel flex flex-col gap-1 px-4 py-3 text-sm ${author === 'Voce' ? 'self-end text-right' : 'self-start text-left'}`;
-  bubble.innerHTML = `<span class="text-xs font-semibold text-primary">${author}</span><p class="whitespace-pre-line text-text">${message}</p>`;
-  log.appendChild(bubble);
-  log.scrollTop = log.scrollHeight;
 };
 
 const bindInstancias = () => {
@@ -824,21 +1023,59 @@ const bindInstancias = () => {
   const save = document.getElementById('inst-save');
 
   refresh?.addEventListener('click', async () => {
+    setState(
+      (prev) => ({
+        pending: { ...prev.pending, instRefresh: true },
+      }),
+      'pending:inst-refresh:start',
+    );
     try {
       const { data } = await api.post('inst.refresh');
+      setState(
+        (prev) => ({
+          pending: { ...prev.pending, instRefresh: false },
+          instancias: data ? [data] : prev.instancias,
+          forms: { ...prev.forms, instancias: null },
+        }),
+        'inst:refresh',
+      );
       showToast('Conexao atualizada.');
-      setState({ instancias: [data] }, 'inst:refresh');
     } catch (error) {
+      setState(
+        (prev) => ({
+          pending: { ...prev.pending, instRefresh: false },
+        }),
+        'pending:inst-refresh:error',
+      );
       showToast(error?.message || 'Erro ao atualizar conexao.', 'error');
     }
   });
 
   disconnect?.addEventListener('click', async () => {
+    setState(
+      (prev) => ({
+        pending: { ...prev.pending, instDisconnect: true },
+      }),
+      'pending:inst-disconnect:start',
+    );
     try {
       await api.post('inst.disconnect');
+      setState(
+        (prev) => ({
+          pending: { ...prev.pending, instDisconnect: false },
+          instancias: [],
+          forms: { ...prev.forms, instancias: null },
+        }),
+        'inst:disconnect',
+      );
       showToast('Instancia desconectada.');
-      setState({ instancias: [] }, 'inst:disconnect');
     } catch (error) {
+      setState(
+        (prev) => ({
+          pending: { ...prev.pending, instDisconnect: false },
+        }),
+        'pending:inst-disconnect:error',
+      );
       showToast(error?.message || 'Erro ao desconectar.', 'error');
     }
   });
@@ -853,10 +1090,38 @@ const bindInstancias = () => {
       mensagem_rejeicao: document.getElementById('mensagem-rejeicao')?.value || '',
     };
 
+    setState(
+      (prev) => ({
+        pending: { ...prev.pending, instSave: true },
+        forms: { ...prev.forms, instancias: payload },
+      }),
+      'pending:inst-save:start',
+    );
+
     try {
       await api.post('inst.update', payload);
+      setState(
+        (prev) => ({
+          pending: { ...prev.pending, instSave: false },
+          instancias: [
+            {
+              ...(prev.instancias?.[0] || {}),
+              ...payload,
+            },
+          ],
+          forms: { ...prev.forms, instancias: null },
+        }),
+        'inst:update',
+      );
       showToast('Configuracoes salvas.');
     } catch (error) {
+      setState(
+        (prev) => ({
+          pending: { ...prev.pending, instSave: false },
+          forms: { ...prev.forms, instancias: payload },
+        }),
+        'pending:inst-save:error',
+      );
       showToast(error?.message || 'Erro ao salvar configuracoes.', 'error');
     }
   });
@@ -868,14 +1133,37 @@ const bindSupportForm = () => {
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
-    const message = document.getElementById('support-message')?.value.trim();
+    const textarea = document.getElementById('support-message');
+    const rawMessage = textarea?.value ?? '';
+    const message = rawMessage.trim();
     if (!message) return;
+
+    setState(
+      (prev) => ({
+        pending: { ...prev.pending, supportSend: true },
+        forms: { ...prev.forms, support: rawMessage },
+      }),
+      'pending:support-send:start',
+    );
 
     try {
       const { data } = await api.post('support.chat', { message });
+      setState(
+        (prev) => ({
+          pending: { ...prev.pending, supportSend: false },
+          forms: { ...prev.forms, support: '' },
+        }),
+        'support:send:success',
+      );
       showToast(data?.reply || 'Solicitacao enviada.');
-      document.getElementById('support-message').value = '';
     } catch (error) {
+      setState(
+        (prev) => ({
+          pending: { ...prev.pending, supportSend: false },
+          forms: { ...prev.forms, support: rawMessage },
+        }),
+        'support:send:error',
+      );
       showToast(error?.message || 'Erro ao enviar mensagem.', 'error');
     }
   });
@@ -888,6 +1176,8 @@ const handleLoginSuccess = async (data, options = {}) => {
   const userEmail = data?.email ?? data?.user?.email ?? fallbackEmail ?? null;
   const sessionToken = data?.session_token ?? data?.sessionToken ?? null;
 
+  const currentForms = getState().forms || {};
+
   const nextState = {
     auth: {
       user: { id: userId, email: userEmail },
@@ -895,6 +1185,15 @@ const handleLoginSuccess = async (data, options = {}) => {
     },
     currentView: 'dados',
     isSignupOpen: false,
+    forms: {
+      ...currentForms,
+      login: { email: '' },
+      dados: null,
+      instancias: null,
+      support: '',
+      chatPersona: 'josi',
+    },
+    chat: { messages: [] },
   };
 
   if (data?.empresa) {

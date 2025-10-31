@@ -236,6 +236,57 @@ main {
   box-shadow: var(--shadow-soft);
 }
 
+@keyframes spinner-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  border-right-color: currentColor;
+  animation: spinner-rotate 0.8s linear infinite;
+}
+
+.spinner-sm {
+  width: 1rem;
+  height: 1rem;
+  border-width: 2px;
+}
+
+.spinner-md {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-width: 2.5px;
+}
+
+.btn-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.btn-loading {
+  pointer-events: none;
+}
+
+.btn-loading .btn-label {
+  visibility: hidden;
+}
+
+.btn-loading .spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
 .btn-primary {
   position: relative;
   display: inline-flex;
@@ -275,6 +326,20 @@ main {
   opacity: 1;
 }
 
+.btn-primary:disabled,
+.btn-primary[disabled] {
+  cursor: not-allowed;
+  opacity: 0.72;
+  transform: none;
+  box-shadow: none;
+}
+
+.toggle-chip:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+  transform: none;
+}
+
 .input-field {
   border-radius: 1rem;
   border: 1px solid var(--border);
@@ -296,6 +361,7 @@ main {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+  position: relative;
   border-radius: 999px;
   border: 1px solid var(--border);
   background: rgba(255, 255, 255, 0.04);

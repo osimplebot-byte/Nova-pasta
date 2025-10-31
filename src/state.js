@@ -24,6 +24,16 @@ const state = {
     instSave: false,
     supportSend: false,
   },
+  forms: {
+    login: { email: '' },
+    dados: null,
+    instancias: null,
+    support: '',
+    chatPersona: 'josi',
+  },
+  chat: {
+    messages: [],
+  },
   onboardingStep: 0,
   isTourVisible: true,
   hasHydrated: false,
