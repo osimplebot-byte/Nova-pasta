@@ -389,61 +389,97 @@ const renderTestDrive = (state) => {
   const messages = state.chat?.messages ?? [];
   const personaValue = state.forms?.chatPersona || 'josi';
   const lastMessageId = messages.length ? messages[messages.length - 1].id : '';
+  const isDemoActive = Boolean(state.chat?.useDemo);
+
+  const suggestions = [
+    { emoji: '🛍️', text: 'Quais produtos voces oferecem?' },
+    { emoji: '⏰', text: 'Qual o horario de atendimento?' },
+    { emoji: '🙋', text: 'Existe suporte humano?' },
+  ];
 
   return `
-    <section class="space-y-4">
-      <header class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h3 class="text-lg font-semibold text-text">Simulador</h3>
-          <p class="text-sm text-text-muted">Converse com o agente usando dados reais ou demo.</p>
+    <section class="flex flex-col gap-6">
+      <header class="space-y-4">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div class="space-y-1">
+            <h3 class="text-2xl font-semibold leading-tight text-text">Test-Drive</h3>
+            <p class="text-sm text-text-muted">Converse com o agente usando dados reais ou demo.</p>
+          </div>
+          <div class="flex flex-col items-end gap-2">
+            <span class="text-[11px] font-semibold uppercase tracking-[0.32em] text-text-muted">Dados demo</span>
+            <button
+              id="toggle-demo"
+              type="button"
+              class="demo-switch ${isDemoActive ? 'on' : 'off'}"
+              data-active="${isDemoActive}"
+              aria-pressed="${isDemoActive}"
+            >
+              <span class="demo-switch-label">${isDemoActive ? 'ON' : 'OFF'}</span>
+              <span class="demo-switch-indicator" aria-hidden="true"></span>
+            </button>
+          </div>
         </div>
-        <div class="flex items-center gap-2">
-          <select id="persona-toggle" class="input-field text-sm" ${isSending ? 'disabled' : ''}>
+        <div class="flex flex-wrap items-center gap-3">
+          <label for="persona-toggle" class="text-xs font-semibold uppercase tracking-[0.32em] text-text-muted">
+            Persona
+          </label>
+          <select id="persona-toggle" class="input-field w-full bg-black/10 text-sm sm:w-auto" ${
+            isSending ? 'disabled' : ''
+          }>
             <option value="josi" ${personaValue === 'josi' ? 'selected' : ''}>Josi</option>
             <option value="clara" ${personaValue === 'clara' ? 'selected' : ''}>Clara</option>
           </select>
-          <button id="toggle-demo" class="toggle-chip text-xs">Dados demo</button>
         </div>
       </header>
 
-      <section class="neon-card flex flex-col gap-4 px-6 py-6">
-        <div
-          id="chat-log"
-          class="glass-panel flex max-h-[360px] flex-col gap-3 overflow-y-auto px-4 py-4 text-sm text-text"
-          data-last-message="${lastMessageId}"
-          data-has-messages="${messages.length > 0}"
-        >
-          ${
-            messages.length
-              ? messages.map((entry) => renderChatBubble(entry)).join('')
-              : '<p class="text-text-muted">Nenhuma mensagem ainda. Envie algo para comecar.</p>'
-          }
-        </div>
-        <div class="flex flex-col gap-3">
-          <div class="flex flex-wrap gap-2 text-xs">
-            ${['Quais produtos voces oferecem?', 'Qual o horario de atendimento?', 'Existe suporte humano?']
-                .map((suggestion) => `
-                  <button class="toggle-chip text-xs" data-suggestion="${suggestion}">
-                    ${suggestion}
-                  </button>
-                `)
-                .join('')}
+      <section class="neon-card">
+        <div class="flex flex-col gap-6 rounded-[1.05rem] bg-surface p-6 shadow-[0_24px_60px_rgba(8,5,24,0.45)]">
+          <div
+            id="chat-log"
+            class="flex max-h-[420px] flex-col gap-4 overflow-y-auto rounded-3xl border border-border bg-black/20 px-5 py-6 text-sm text-text shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
+            data-last-message="${lastMessageId}"
+            data-has-messages="${messages.length > 0}"
+          >
+            ${
+              messages.length
+                ? messages.map((entry) => renderChatBubble(entry)).join('')
+                : '<p class="text-center text-sm text-text-muted">Nenhuma mensagem ainda. Envie algo para comecar.</p>'
+            }
           </div>
-          <form id="chat-form" class="flex gap-2">
-            <input id="chat-input" class="input-field flex-1 text-sm" placeholder="Digite uma mensagem..." ${
-              isSending ? 'disabled' : ''
-            } />
-            <button
-              type="submit"
-              class="btn-primary px-5 py-3 text-sm font-semibold uppercase tracking-[0.18em] ${
-                isSending ? 'btn-loading' : ''
-              }"
-              ${isSending ? 'disabled' : ''}
-            >
-              ${isSending ? renderSpinner('sm') : ''}
-              <span class="btn-label">Enviar</span>
-            </button>
-          </form>
+          <div class="flex flex-col gap-4">
+            <div class="flex flex-col items-center gap-2 text-sm">
+              ${suggestions
+                .map(
+                  (item) => `
+                    <button
+                      class="chat-suggestion"
+                      data-suggestion="${item.text}"
+                      type="button"
+                    >
+                      <span aria-hidden="true">${item.emoji}</span>
+                      <span>${item.text}</span>
+                    </button>
+                  `,
+                )
+                .join('')}
+            </div>
+            <form id="chat-form" class="flex flex-col gap-3 sm:flex-row">
+              <input
+                id="chat-input"
+                class="input-field flex-1 text-base sm:min-h-[52px]"
+                placeholder="Digite uma mensagem..."
+                ${isSending ? 'disabled' : ''}
+              />
+              <button
+                type="submit"
+                class="chat-submit-button ${isSending ? 'btn-loading' : ''}"
+                ${isSending ? 'disabled' : ''}
+              >
+                ${isSending ? renderSpinner('sm') : ''}
+                <span class="chat-submit-label">ENVIAR</span>
+              </button>
+            </form>
+          </div>
         </div>
       </section>
     </section>
@@ -659,12 +695,15 @@ const renderToggle = (name, label, checked) => `
 `;
 
 const renderChatBubble = (message) => {
-  const alignment = message.role === 'user' ? 'self-end text-right' : 'self-start text-left';
-  const author = message.author || (message.role === 'user' ? 'Voce' : 'Agente');
+  const author = escapeHTML(message.author || (message.role === 'user' ? 'Voce' : 'Agente'));
+  const text = escapeHTML(message.message || '');
+  const baseAlignment = message.role === 'user' ? 'self-end text-left' : 'self-start text-left';
+  const variantClass = message.role === 'user' ? 'chat-bubble chat-bubble--user' : 'chat-bubble chat-bubble--agent';
+
   return `
-    <div class="glass-panel chat-bubble flex flex-col gap-1 px-4 py-3 text-sm ${alignment}" data-chat-message="${message.id}">
-      <span class="text-xs font-semibold text-primary">${author}</span>
-      <p class="whitespace-pre-line text-text">${message.message}</p>
+    <div class="${variantClass} ${baseAlignment}" data-chat-message="${message.id}" data-chat-role="${message.role}">
+      <span class="chat-bubble-author">${author}</span>
+      <p class="chat-bubble-content">${text}</p>
     </div>
   `;
 };
@@ -966,6 +1005,32 @@ const bindChat = () => {
   const input = document.getElementById('chat-input');
   const log = document.getElementById('chat-log');
   const personaSelect = document.getElementById('persona-toggle');
+  const demoSwitch = document.getElementById('toggle-demo');
+
+  demoSwitch?.addEventListener('click', () => {
+    const isActive = demoSwitch.getAttribute('data-active') === 'true';
+    const nextState = (!isActive).toString();
+
+    demoSwitch.setAttribute('data-active', nextState);
+    demoSwitch.setAttribute('aria-pressed', nextState);
+    demoSwitch.classList.toggle('on', nextState === 'true');
+    demoSwitch.classList.toggle('off', nextState === 'false');
+
+    const label = demoSwitch.querySelector('.demo-switch-label');
+    if (label) {
+      label.textContent = nextState === 'true' ? 'ON' : 'OFF';
+    }
+
+    setState(
+      (prev) => ({
+        chat: {
+          ...prev.chat,
+          useDemo: nextState === 'true',
+        },
+      }),
+      'chat:demo-toggle',
+    );
+  });
 
   personaSelect?.addEventListener('change', () => {
     const value = personaSelect.value || 'josi';
