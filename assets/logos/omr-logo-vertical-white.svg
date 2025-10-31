@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 320" role="img" aria-labelledby="title desc">
+  <title id="title">Logotipo OMR Studio - Vertical branca</title>
+  <desc id="desc">Ícone branco com recorte de engrenagem acima do texto OMR Studio branco.</desc>
+  <defs>
+    <mask id="gear-cutout-vertical" maskUnits="userSpaceOnUse">
+      <rect width="220" height="320" fill="#fff"/>
+      <g transform="translate(40 24)">
+        <circle cx="60" cy="60" r="34" fill="#000"/>
+        <circle cx="60" cy="60" r="26" fill="none" stroke="#000" stroke-width="14" stroke-linecap="round" stroke-dasharray="32 22"/>
+        <circle cx="60" cy="60" r="10" fill="#000"/>
+      </g>
+    </mask>
+  </defs>
+  <g transform="translate(10 0)">
+    <path fill="#FFFFFF" mask="url(#gear-cutout-vertical)" d="M40 20h120a48 48 0 0 1 48 48v36a48 48 0 0 1-48 48h-60l-36 36v-36H40a48 48 0 0 1-48-48V68a48 48 0 0 1 48-48z"/>
+  </g>
+  <g font-family="'Montserrat', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-weight="700" text-anchor="middle" fill="#FFFFFF">
+    <text x="110" y="230" font-size="56" letter-spacing="0.02em">OMR</text>
+    <text x="110" y="288" font-size="48" letter-spacing="0.02em">Studio</text>
+  </g>
+</svg>

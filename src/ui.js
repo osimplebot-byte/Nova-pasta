@@ -67,6 +67,149 @@ const TAB_CONFIG = [
   { id: 'ajuda', label: 'Ajuda', icon: 'ajuda' },
 ];
 
+const BRAND_SOURCES = {
+  horizontal: {
+    light: './assets/logos/omr-logo-horizontal.svg',
+    dark: './assets/logos/omr-logo-white.svg',
+  },
+  vertical: {
+    light: './assets/logos/omr-logo-vertical.svg',
+    dark: './assets/logos/omr-logo-vertical-white.svg',
+  },
+  icon: {
+    light: './assets/logos/omr-logo-icon.svg',
+    dark: './assets/logos/omr-logo-icon.svg',
+  },
+  standard: {
+    light: './assets/logos/omr-logo-standard.svg',
+    dark: './assets/logos/omr-logo-standard.svg',
+  },
+  white: {
+    light: './assets/logos/omr-logo-white.svg',
+    dark: './assets/logos/omr-logo-white.svg',
+  },
+  dark: {
+    light: './assets/logos/omr-logo-dark.svg',
+    dark: './assets/logos/omr-logo-dark.svg',
+  },
+  mono: {
+    light: './assets/logos/omr-logo-mono.svg',
+    dark: './assets/logos/omr-logo-mono.svg',
+  },
+};
+
+const renderBrandLockup = ({
+  variant = 'horizontal',
+  size = 'md',
+  label = 'OMR Studio',
+  className = '',
+} = {}) => {
+  const sources = BRAND_SOURCES[variant] || BRAND_SOURCES.horizontal;
+  const lightSrc = sources.light;
+  const darkSrc = sources.dark ?? lightSrc;
+  const labelText = escapeHTML(label);
+  const classes = ['brand-lockup', `brand-lockup-${variant}`, `brand-lockup-${size}`, className]
+    .filter(Boolean)
+    .join(' ');
+
+  return `
+    <span class="${classes}" role="img" aria-label="${labelText}">
+      <img src="${lightSrc}" data-variant="light" alt="" aria-hidden="true" loading="lazy" decoding="async" />
+      <img src="${darkSrc}" data-variant="dark" alt="" aria-hidden="true" loading="lazy" decoding="async" />
+    </span>
+  `;
+};
+
+const BRAND_KIT_VARIANTS = [
+  {
+    id: 'standard',
+    label: 'Padrão',
+    description: 'Rosa + preto para fundos claros.',
+    variant: 'standard',
+    tone: 'light',
+    file: './assets/logos/omr-logo-standard.svg',
+  },
+  {
+    id: 'white',
+    label: 'Branca',
+    description: 'Ideal para fundos escuros ou fotos.',
+    variant: 'white',
+    tone: 'dark',
+    file: './assets/logos/omr-logo-white.svg',
+  },
+  {
+    id: 'dark',
+    label: 'Escura',
+    description: 'Cinza profundo para fundos claros.',
+    variant: 'dark',
+    tone: 'light',
+    file: './assets/logos/omr-logo-dark.svg',
+  },
+  {
+    id: 'mono',
+    label: 'Monocromática',
+    description: 'Aplicações que exigem uma única cor.',
+    variant: 'mono',
+    tone: 'light',
+    file: './assets/logos/omr-logo-mono.svg',
+  },
+  {
+    id: 'icon',
+    label: 'Ícone isolado',
+    description: 'Somente o balão com engrenagem.',
+    variant: 'icon',
+    tone: 'neutral',
+    file: './assets/logos/omr-logo-icon.svg',
+  },
+];
+
+const renderBrandKitCard = (item) => `
+  <div class="brand-kit-card" data-tone="${item.tone}">
+    <div class="brand-kit-preview">
+      ${renderBrandLockup({ variant: item.variant, size: 'md', label: `OMR Studio — ${item.label}` })}
+    </div>
+    <div class="brand-kit-meta">
+      <h5>${escapeHTML(item.label)}</h5>
+      <p>${escapeHTML(item.description)}</p>
+      <a class="brand-kit-link" href="${item.file}" download>
+        Baixar SVG
+      </a>
+    </div>
+  </div>
+`;
+
+const renderBrandKitOrientationCard = () => `
+  <div class="brand-kit-card brand-kit-card--orientation" data-tone="neutral">
+    <div class="brand-kit-preview brand-kit-preview--stack">
+      ${renderBrandLockup({ variant: 'horizontal', size: 'sm', label: 'OMR Studio — Horizontal' })}
+      ${renderBrandLockup({ variant: 'vertical', size: 'sm', label: 'OMR Studio — Vertical' })}
+    </div>
+    <div class="brand-kit-meta">
+      <h5>Orientações</h5>
+      <p>Alternativas horizontal e vertical para qualquer layout.</p>
+      <div class="brand-kit-links">
+        <a href="./assets/logos/omr-logo-horizontal.svg" download>Horizontal</a>
+        <a href="./assets/logos/omr-logo-vertical.svg" download>Vertical</a>
+        <a href="./assets/logos/omr-logo-vertical-white.svg" download>Vertical branca</a>
+      </div>
+    </div>
+  </div>
+`;
+
+const renderBrandKit = () => `
+  <section class="neon-card brand-kit-block space-y-5 px-6 py-6">
+    <header class="space-y-1">
+      <h4 class="text-sm font-semibold text-text">Identidade visual</h4>
+      <p class="text-xs text-text-muted">Baixe as versões oficiais do logotipo OMR Studio.</p>
+    </header>
+    <div class="brand-kit-grid">
+      ${BRAND_KIT_VARIANTS.map((item) => renderBrandKitCard(item)).join('')}
+      ${renderBrandKitOrientationCard()}
+    </div>
+    <p class="brand-kit-note text-xs text-text-muted">Arquivos em SVG prontos para usar em interfaces, impressões e automações.</p>
+  </section>
+`;
+
 const PERSONA_OPTIONS = [
   { id: 'josi', label: 'Josi', description: 'Acolhedora', accent: '#D81B60', accentRgb: '216, 27, 96', initial: 'J' },
   { id: 'clara', label: 'Clara', description: 'Objetiva', accent: '#5ad7ff', accentRgb: '90, 215, 255', initial: 'C' },
@@ -132,10 +275,13 @@ const renderLogin = (state) => {
           <span aria-hidden="true">${themeIcon}</span>
           <span class="sr-only">Alternar tema</span>
         </button>
-        <header class="space-y-2 text-center">
-          <p class="pill-label text-primary">OMR Studio Piloto</p>
-          <h1 class="text-3xl font-semibold tracking-wide text-text">Entrar</h1>
-          <p class="text-sm text-text-muted">Use seu e-mail institucional para configurar a instância piloto.</p>
+        <header class="login-header">
+          ${renderBrandLockup({ variant: 'vertical', size: 'lg', label: 'OMR Studio' })}
+          <div class="space-y-2 text-center">
+            <p class="pill-label text-primary">OMR Studio Piloto</p>
+            <h1 class="text-3xl font-semibold tracking-wide text-text">Entrar</h1>
+            <p class="text-sm text-text-muted">Use seu e-mail institucional para configurar a instancia piloto.</p>
+          </div>
         </header>
 
         <form id="login-form" class="space-y-6">
@@ -208,7 +354,7 @@ const renderDrawer = (state) => `
     <div class="drawer-backdrop" data-drawer-close></div>
     <aside class="drawer-panel" role="dialog" aria-modal="true" aria-label="Menu principal">
       <header class="drawer-header">
-        <span class="drawer-logo">OMR Studio</span>
+        ${renderBrandLockup({ variant: 'horizontal', size: 'sm', label: 'OMR Studio', className: 'drawer-logo' })}
         <button class="icon-toggle" type="button" data-drawer-close aria-label="Fechar menu">
           ${icon('close')}
         </button>
@@ -271,6 +417,7 @@ const renderAppHeader = (state) => {
     <button id="drawer-toggle" class="icon-toggle" type="button" aria-label="Abrir menu de seções">
       ${icon('menu')}
     </button>
+    ${renderBrandLockup({ variant: 'icon', size: 'xs', label: 'OMR Studio', className: 'topbar-brand' })}
     <div class="topbar-title-group">
       <p class="topbar-title">Painel do Piloto</p>
       <span class="topbar-subtitle text-primary">OMR Studio</span>
@@ -625,6 +772,8 @@ const renderAjuda = (state) => {
         <h3 class="text-lg font-semibold text-text">Suporte OMR</h3>
         <p class="text-sm text-text-muted">Consulte a base rápida ou acione a equipe humana.</p>
       </header>
+
+      ${renderBrandKit()}
 
       <section class="neon-card space-y-4 px-6 py-6">
         <div class="space-y-3">
