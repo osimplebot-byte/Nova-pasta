@@ -1,5 +1,12 @@
 import { api } from './api.js';
 import { getState, setState, showToast } from './state.js';
+import {
+  fetchWorkspaceContext,
+  saveWorkspaceContext,
+  signInWithEmail,
+  signUpWithEmail,
+  signOut as signOutSupabase,
+} from './supabaseService.js';
 
 const escapeHTML = (value) =>
   String(value ?? '')
@@ -946,11 +953,15 @@ const bindLoginView = () => {
     );
 
     try {
-      const { data } = await api.post('auth.login', { email, password }, { auth: false });
-      await handleLoginSuccess(data, { fallbackEmail: email });
+      const sessionData = await signInWithEmail(email, password);
+      await handleLoginSuccess(sessionData, { fallbackEmail: email });
     } catch (error) {
-      console.error('[OMR:UI] auth.login falhou', error);
-      showToast(error?.message || 'Falha ao autenticar. Confira as credenciais.', 'error');
+      console.error('[OMR:UI] Supabase login falhou', error);
+      const message =
+        error?.code === 'AUTH_INVALID'
+          ? 'Credenciais inválidas. Verifique e tente novamente.'
+          : error?.message || 'Falha ao autenticar. Confira as credenciais.';
+      showToast(message, 'error');
     } finally {
       setState(
         (prev) => ({
@@ -1004,14 +1015,15 @@ const bindLogout = () => {
   if (!btn) return;
   btn.addEventListener('click', async () => {
     try {
-      await api.post('auth.logout');
+      await signOutSupabase();
     } catch (error) {
-      console.info('[OMR:UI] auth.logout skipped', error);
+      console.info('[OMR:UI] Supabase logout falhou, limpando sessão local', error);
     } finally {
       setState(
         (prev) => ({
           auth: { user: null, sessionToken: null },
           currentView: 'login',
+          usuario: null,
           forms: {
             ...prev.forms,
             login: { email: '' },
@@ -1177,16 +1189,13 @@ const bindDadosForm = () => {
     );
 
     try {
-      await api.post('dados.save', payload);
+      const context = await saveWorkspaceContext(payload);
       setState(
         (prev) => ({
           pending: { ...prev.pending, dadosSave: false },
-          empresa: {
-            ...prev.empresa,
-            ...payload.empresa,
-            produtos: payload.produtos,
-            faqs: payload.faqs,
-          },
+          usuario: context?.usuario || prev.usuario,
+          empresa: context?.empresa || null,
+          instancias: Array.isArray(context?.instancias) ? context.instancias : prev.instancias,
           forms: { ...prev.forms, dados: null },
         }),
         'dados:update',
@@ -1200,6 +1209,19 @@ const bindDadosForm = () => {
         }),
         'pending:dados-save:error',
       );
+
+      if (error?.code === 'AUTH_REQUIRED') {
+        setState(
+          {
+            auth: { user: null, sessionToken: null },
+            currentView: 'login',
+          },
+          'dados:auth-required',
+        );
+        showToast('Sessão expirada. Faça login novamente.', 'error');
+        return;
+      }
+
       showToast(error?.message || 'Erro ao salvar dados.', 'error');
     }
   });
@@ -1471,17 +1493,30 @@ const bindSupportForm = () => {
 };
 
 const handleLoginSuccess = async (data, options = {}) => {
-  const { skipContext = false, fallbackEmail = null, fallbackUserId = null } = options;
+  const { skipContext = false, fallbackEmail = null, fallbackUserId = null, skipToast = false } = options;
 
-  const userId = data?.user_id ?? data?.user?.id ?? fallbackUserId ?? null;
-  const userEmail = data?.email ?? data?.user?.email ?? fallbackEmail ?? null;
-  const sessionToken = data?.session_token ?? data?.sessionToken ?? null;
+  const sessionUser = data?.user || data?.session?.user || null;
+  const userId = sessionUser?.id ?? data?.user_id ?? fallbackUserId ?? null;
+  const userEmail = sessionUser?.email ?? data?.email ?? fallbackEmail ?? null;
+  const sessionToken = data?.session?.access_token ?? data?.session_token ?? data?.sessionToken ?? null;
+
+  let context = null;
+  if (!skipContext && userId) {
+    try {
+      context = await fetchWorkspaceContext();
+    } catch (error) {
+      console.warn('[OMR:UI] Falha ao carregar contexto Supabase', error);
+    }
+  }
 
   const currentForms = getState().forms || {};
+  const empresaFromData = data?.empresa || null;
+  const instanciasFromData = Array.isArray(data?.instancias) ? data.instancias : null;
+  const usuarioFromData = data?.usuario || null;
 
   const nextState = {
     auth: {
-      user: { id: userId, email: userEmail },
+      user: userId ? { id: userId, email: userEmail } : null,
       sessionToken,
     },
     currentView: 'dados',
@@ -1495,33 +1530,17 @@ const handleLoginSuccess = async (data, options = {}) => {
       chatPersona: 'josi',
     },
     chat: { messages: [] },
+    usuario: context?.usuario ?? usuarioFromData ?? null,
+    empresa: context?.empresa ?? empresaFromData ?? null,
+    instancias: Array.isArray(context?.instancias)
+      ? context.instancias
+      : instanciasFromData ?? [],
   };
-
-  if (data?.empresa) {
-    nextState.empresa = data.empresa;
-  }
-
-  if (Array.isArray(data?.instancias)) {
-    nextState.instancias = data.instancias;
-  }
 
   setState(nextState, 'login:success');
 
-  showToast(skipContext ? 'Sessão demo iniciada.' : 'Sessão iniciada com sucesso.');
-
-  if (skipContext) return;
-
-  try {
-    const context = await api.post('auth.me');
-    setState(
-      {
-        empresa: context.data?.empresa || null,
-        instancias: context.data?.instancias || [],
-      },
-      'auth:hydrate',
-    );
-  } catch (error) {
-    console.warn('[OMR:UI] auth.me falhou', error);
+  if (!skipToast) {
+    showToast(skipContext ? 'Sessão demo iniciada.' : 'Sessão iniciada com sucesso.');
   }
 };
 
@@ -1580,19 +1599,61 @@ const bindSignupModal = () => {
 
   closeBtn?.addEventListener('click', () => setState({ isSignupOpen: false }, 'signup:close'));
 
-  form?.addEventListener('submit', (event) => {
+  form?.addEventListener('submit', async (event) => {
     event.preventDefault();
     const data = new FormData(form);
-    const password = data.get('password');
-    const confirm = data.get('password_confirm');
+
+    const fullName = (data.get('full_name') || '').toString().trim();
+    const email = (data.get('email') || '').toString().trim();
+    const whatsapp = (data.get('whatsapp') || '').toString().trim();
+    const password = (data.get('password') || '').toString();
+    const confirm = (data.get('password_confirm') || '').toString();
+
+    if (!fullName || !email || !password) {
+      showToast('Preencha nome, e-mail e senha para continuar.', 'error');
+      return;
+    }
 
     if (password !== confirm) {
       showToast('As senhas não conferem.', 'error');
       return;
     }
 
-    showToast('Cadastro enviado (modo demonstração).');
-    setState({ isSignupOpen: false }, 'signup:submitted');
+    setState(
+      (prev) => ({
+        pending: { ...prev.pending, signup: true },
+      }),
+      'pending:signup:start',
+    );
+
+    try {
+      const metadata = { full_name: fullName, whatsapp };
+      const result = await signUpWithEmail(email, password, metadata);
+
+      setState({ isSignupOpen: false }, 'signup:submitted');
+
+      if (result?.session?.user) {
+        await handleLoginSuccess(result, {
+          fallbackEmail: email,
+          fallbackUserId: result.session.user.id,
+          skipToast: true,
+        });
+        showToast('Conta criada e sessão iniciada.', 'success');
+      } else {
+        showToast('Cadastro criado. Confirme o e-mail para acessar.', 'info');
+      }
+    } catch (error) {
+      console.error('[OMR:UI] Supabase signup falhou', error);
+      const message = error?.message || 'Não foi possível concluir o cadastro.';
+      showToast(message, 'error');
+    } finally {
+      setState(
+        (prev) => ({
+          pending: { ...prev.pending, signup: false },
+        }),
+        'pending:signup:finish',
+      );
+    }
   });
 };
 
