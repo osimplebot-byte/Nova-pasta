@@ -1,3 +1,4 @@
+import { supabase } from './supabase.js';
 import { BREAKPOINTS, resolveBreakpoint } from './constants.js';
 
 const listeners = new Set();
@@ -13,11 +14,13 @@ const state = {
   theme: localStorage.getItem('omr:theme') || 'light',
   currentView: 'login',
   auth: defaultAuth,
+  usuario: null,
   empresa: null,
   instancias: [],
   pending: {
     login: false,
     dadosSave: false,
+    signup: false,
     chatSend: false,
     instRefresh: false,
     instDisconnect: false,
@@ -87,41 +90,58 @@ const syncLayout = (layout) => {
 };
 
 const persistAuth = (auth) => {
-  if (auth?.sessionToken) {
-    localStorage.setItem(
-      'omr:session',
-      JSON.stringify({
-        user: auth.user,
-        sessionToken: auth.sessionToken,
-      }),
-    );
-  } else {
-    localStorage.removeItem('omr:session');
+  try {
+    if (auth?.sessionToken) {
+      localStorage.setItem(
+        'omr:session',
+        JSON.stringify({
+          user: auth.user,
+          sessionToken: auth.sessionToken,
+        }),
+      );
+    } else {
+      localStorage.removeItem('omr:session');
+    }
+  } catch (error) {
+    console.warn('[OMR:STATE] Falha ao persistir sessão', error);
   }
 };
 
-export const hydrateAuth = () => {
+export const hydrateAuth = async () => {
   try {
-    const stored = localStorage.getItem('omr:session');
-    if (!stored) return;
+    const {
+      data: { session },
+      error,
+    } = await supabase.auth.getSession();
 
-    const parsed = JSON.parse(stored);
-
-    if (parsed?.sessionToken) {
-      setState(
-        {
-          auth: {
-            user: parsed.user,
-            sessionToken: parsed.sessionToken,
-          },
-          currentView: 'dados',
-        },
-        'hydrate-auth',
-      );
+    if (error) {
+      console.error('[OMR:STATE] Falha ao consultar sessão Supabase', error);
+      return null;
     }
+
+    if (!session?.user) {
+      setState({ auth: { ...defaultAuth }, currentView: 'login', usuario: null }, 'hydrate-auth:guest');
+      return null;
+    }
+
+    const authState = {
+      user: { id: session.user.id, email: session.user.email },
+      sessionToken: session.access_token,
+    };
+
+    setState(
+      {
+        auth: authState,
+        currentView: 'dados',
+        usuario: null,
+      },
+      'hydrate-auth',
+    );
+
+    return authState;
   } catch (error) {
-    console.error('[OMR:STATE] Falha ao restaurar sessão', error);
-    localStorage.removeItem('omr:session');
+    console.error('[OMR:STATE] Erro inesperado ao hidratar sessão', error);
+    return null;
   }
 };
 

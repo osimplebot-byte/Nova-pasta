@@ -1,5 +1,6 @@
 import { render } from './ui.js';
 import { getState, hydrateAuth, setState, subscribe } from './state.js';
+import { fetchWorkspaceContext } from './supabaseService.js';
 import { BREAKPOINTS, resolveBreakpoint } from './constants.js';
 
 const DEFAULT_TAB = 'dados';
@@ -68,8 +69,26 @@ const applyLayoutScroll = () => {
   document.documentElement.style.setProperty('--scroll-y', `${scrollY}`);
 };
 
-const bootstrap = () => {
-  hydrateAuth();
+const bootstrap = async () => {
+  const authState = await hydrateAuth();
+
+  if (authState?.user?.id) {
+    try {
+      const context = await fetchWorkspaceContext();
+      if (context) {
+        setState(
+          (prev) => ({
+            usuario: context.usuario || prev.usuario,
+            empresa: context.empresa || null,
+            instancias: Array.isArray(context.instancias) ? context.instancias : prev.instancias,
+          }),
+          'auth:context:hydrate',
+        );
+      }
+    } catch (error) {
+      console.warn('[OMR:APP] Falha ao carregar contexto inicial', error);
+    }
+  }
 
   const state = getState();
   if (state.currentView !== 'login') {
