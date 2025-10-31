@@ -544,8 +544,7 @@
               "name": "error.message",
               "value": "Ação não suportada pelo fluxo."
             }
-          ],
-          "options": {}
+          ]
         }
       },
       "type": "n8n-nodes-base.set",
