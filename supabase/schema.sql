@@ -4,7 +4,7 @@
 create extension if not exists "pgcrypto";
 
 create table if not exists public.usuarios (
-    id uuid primary key default gen_random_uuid(),
+    id uuid primary key references auth.users(id) on delete cascade default auth.uid(),
     email text not null unique,
     password_hash text,
     created_at timestamptz not null default timezone('utc'::text, now())
