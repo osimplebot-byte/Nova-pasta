@@ -523,10 +523,138 @@ const renderConexoes = (state) => {
   const isRefreshing = state.pending?.instRefresh;
   const isDisconnecting = state.pending?.instDisconnect;
   const isSaving = state.pending?.instSave;
+  const statusLabel = escapeHTML(instancia.status || 'Desconectado');
+  const normalizedStatus = statusLabel.toLowerCase();
+  const isOnline = ['conectado', 'connected', 'online', 'on'].some((flag) =>
+    normalizedStatus.includes(flag),
+  );
+  const lastEventRaw = typeof instancia.last_event === 'string' ? instancia.last_event.trim() : '';
+  const hasLastEvent = Boolean(lastEventRaw);
+  const lastEvent = hasLastEvent
+    ? `Ultimo evento: ${escapeHTML(lastEventRaw)}`
+    : 'Sem registros recentes.';
+  const qrMarkup = instancia.qr_svg
+    ? `<img src="data:image/svg+xml;utf8,${encodeURIComponent(instancia.qr_svg)}" alt="QR Code" class="connections-qr__image" />`
+    : '<span class="connections-qr__placeholder">Nenhum QR disponivel. Clique em atualizar.</span>';
+
+  const toggleOptions = [
+    {
+      name: 'rejeitar_chamadas',
+      label: 'Rejeitar chamadas',
+      description: 'Recusa automaticamente ligacoes recebidas pelo numero.',
+      checked: instancia.rejeitar_chamadas,
+    },
+    {
+      name: 'ignorar_grupos',
+      label: 'Ignorar grupos',
+      description: 'Nao responde mensagens enviadas em conversas de grupo.',
+      checked: instancia.ignorar_grupos,
+    },
+    {
+      name: 'sempre_online',
+      label: 'Sempre online',
+      description: 'Mantem o status da instancia como ativo continuamente.',
+      checked: instancia.sempre_online,
+    },
+    {
+      name: 'ler_mensagens',
+      label: 'Ler mensagens',
+      description: 'Marca as mensagens como lidas apos o processamento.',
+      checked: instancia.ler_mensagens,
+    },
+    {
+      name: 'sincronizar_historico',
+      label: 'Sincronizar historico',
+      description: 'Busca mensagens anteriores ao concluir a conexao.',
+      checked: instancia.sincronizar_historico,
+    },
+  ];
 
   return `
-    <section class="space-y-6">
+    <section class="space-y-6 connections-view">
       <header class="space-y-1">
+        <h3 class="text-lg font-semibold text-text">Conexoes Evolution API</h3>
+        <p class="text-sm text-text-muted">Acompanhe a integracao com o WhatsApp e ajuste os comportamentos da instancia.</p>
+      </header>
+
+      <div class="connections-grid">
+        <section class="neon-card connections-card px-6 py-6">
+          <div class="connections-card__header">
+            <div class="connections-card__title">
+              <span class="connections-card__label">Telefone</span>
+              <span class="connections-card__caption">Status</span>
+              <p class="connections-card__status">${statusLabel}</p>
+            </div>
+            <span class="connections-card__badge ${isOnline ? 'is-online' : 'is-offline'}">${isOnline ? 'ON' : 'OFF'}</span>
+          </div>
+          <p class="connections-card__event">${lastEvent}</p>
+          <div class="connections-qr glass-panel">
+            ${qrMarkup}
+          </div>
+          <div class="connections-card__actions">
+            <button
+              id="inst-refresh"
+              class="btn-primary connections-card__action ${isRefreshing ? 'btn-loading' : ''}"
+              ${isRefreshing ? 'disabled' : ''}
+            >
+              ${isRefreshing ? renderSpinner('sm') : ''}
+              <span class="btn-label">🔄 Atualizar</span>
+            </button>
+            <button
+              id="inst-disconnect"
+              class="btn-danger connections-card__action ${isDisconnecting ? 'btn-loading' : ''}"
+              type="button"
+              ${isDisconnecting ? 'disabled' : ''}
+            >
+              ${isDisconnecting ? renderSpinner('sm') : ''}
+              <span class="btn-label">📴 Desconectar</span>
+            </button>
+          </div>
+        </section>
+
+        <section class="neon-card connections-settings px-6 py-6">
+          <header class="connections-settings__header">
+            <div>
+              <h4>Configuracoes</h4>
+              <p>Defina como o Evolution API deve tratar chamadas, grupos e confirmacoes de leitura.</p>
+            </div>
+          </header>
+          <div class="connections-settings__grid">
+            ${toggleOptions
+              .map((option) =>
+                renderToggle(option.name, option.label, option.description, Boolean(option.checked)),
+              )
+              .join('')}
+          </div>
+          <div class="connections-settings__message">
+            <label class="connections-settings__message-label" for="mensagem-rejeicao">Mensagem para chamadas rejeitadas</label>
+            <textarea id="mensagem-rejeicao" class="input-field h-24 w-full text-sm" placeholder="Mensagem de retorno">${escapeHTML(instancia.mensagem_rejeicao || '')}</textarea>
+          </div>
+          <div class="connections-settings__footer">
+            <button
+              id="inst-save"
+              class="btn-primary connections-settings__save ${isSaving ? 'btn-loading' : ''}"
+              type="button"
+              ${isSaving ? 'disabled' : ''}
+            >
+              ${isSaving ? renderSpinner('sm') : ''}
+              <span class="btn-label">Salvar configuracoes</span>
+            </button>
+          </div>
+        </section>
+
+        <section class="neon-card connections-log px-6 py-6">
+          <header class="connections-log__header">
+            <h4>Eventos recentes</h4>
+            <p>Historico basico da instancia para acompanhamento rapido.</p>
+          </header>
+          <ul class="connections-log__list" id="inst-log">
+            ${(instancia.logs || [{ ts: Date.now(), message: 'Sem logs disponiveis.' }])
+              .map((log) => `<li>${formatLog(log)}</li>`)
+              .join('')}
+          </ul>
+        </section>
+      </div>
         <h3 class="text-lg font-semibold text-text">Conexões Evolution API</h3>
         <p class="text-sm text-text-muted">Status da integração com WhatsApp.</p>
       </header>
@@ -717,10 +845,23 @@ const renderFaqCard = (index, faq = {}) => `
   </div>
 `;
 
-const renderToggle = (name, label, checked) => `
-  <label class="glass-panel flex items-center justify-between gap-3 rounded-2xl px-4 py-3 text-sm">
-    <span>${label}</span>
-    <input type="checkbox" name="${name}" ${checked ? 'checked' : ''} class="h-5 w-5 rounded border-border text-primary focus:ring-primary" />
+const renderToggle = (name, label, description, checked) => `
+  <label class="connections-switch glass-panel">
+    <div class="connections-switch__text">
+      <span class="connections-switch__title">${label}</span>
+      <span class="connections-switch__description">${description}</span>
+    </div>
+    <span class="connections-switch__control">
+      <input
+        type="checkbox"
+        name="${name}"
+        ${checked ? 'checked' : ''}
+        class="connections-switch__native"
+      />
+      <span class="connections-switch__visual" aria-hidden="true">
+        <span class="connections-switch__thumb"></span>
+      </span>
+    </span>
   </label>
 `;
 
