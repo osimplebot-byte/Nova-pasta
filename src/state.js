@@ -119,12 +119,12 @@ export const hydrateAuth = () => {
       );
     }
   } catch (error) {
-    console.error('[OMR:STATE] Failed to hydrate auth', error);
+    console.error('[OMR:STATE] Falha ao restaurar sessão', error);
     localStorage.removeItem('omr:session');
   }
 };
 
-// apply persisted theme immediately
+// aplica o tema persistido imediatamente
 document.documentElement.setAttribute('data-theme', state.theme);
 syncLayout(state.layout);
 
