@@ -389,7 +389,6 @@ const renderTestDrive = (state) => {
   const messages = state.chat?.messages ?? [];
   const personaValue = state.forms?.chatPersona || 'josi';
   const lastMessageId = messages.length ? messages[messages.length - 1].id : '';
-  const isDemoActive = Boolean(state.chat?.useDemo);
 
   const suggestions = [
     { emoji: '🛍️', text: 'Quais produtos vocês oferecem?' },
@@ -405,28 +404,6 @@ const renderTestDrive = (state) => {
             <h3 class="text-2xl font-semibold leading-tight text-text">Test-Drive</h3>
             <p class="text-sm text-text-muted">Converse com o agente usando dados reais ou demo.</p>
           </div>
-          <div class="flex flex-col items-end gap-2">
-            <span class="text-[11px] font-semibold uppercase tracking-[0.32em] text-text-muted">Dados demo</span>
-            <button
-              id="toggle-demo"
-              type="button"
-              class="demo-switch ${isDemoActive ? 'on' : 'off'}"
-              data-active="${isDemoActive}"
-              aria-pressed="${isDemoActive}"
-            >
-              <span class="demo-switch-label">${isDemoActive ? 'ON' : 'OFF'}</span>
-              <span class="demo-switch-indicator" aria-hidden="true"></span>
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <section class="space-y-4">
-        <header class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h3 class="text-lg font-semibold text-text">Simulador</h3>
-            <p class="text-sm text-text-muted">Converse com o agente usando dados reais ou de demonstração.</p>
-          </div>
           <div class="flex flex-wrap items-center gap-3">
             <label for="persona-toggle" class="text-xs font-semibold uppercase tracking-[0.32em] text-text-muted">
               Persona
@@ -436,68 +413,42 @@ const renderTestDrive = (state) => {
               <option value="clara" ${personaValue === 'clara' ? 'selected' : ''}>Clara</option>
             </select>
           </div>
-        </header>
+        </div>
+      </header>
 
-        <section class="neon-card">
-          <div class="flex flex-col gap-6 rounded-[1.05rem] bg-surface p-6 shadow-[0_24px_60px_rgba(8,5,24,0.45)]">
-            <div
-              id="chat-log"
-              class="flex max-h-[420px] flex-col gap-4 overflow-y-auto rounded-3xl border border-border bg-black/20 px-5 py-6 text-sm text-text shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
-              data-last-message="${lastMessageId}"
-              data-has-messages="${messages.length > 0}"
-            >
-              ${
-                messages.length
-                  ? messages.map((entry) => renderChatBubble(entry)).join('')
-                  : '<p class="text-center text-sm text-text-muted">Nenhuma mensagem ainda. Envie algo para começar.</p>'
-              }
-            </div>
-
-            <div class="flex flex-col gap-4">
-              <div class="flex flex-col items-center gap-2 text-sm">
-                ${suggestions
-                  .map(
-                    (item) => `
-                      <button
-                        class="chat-suggestion"
-                        data-suggestion="${item.text}"
-                        type="button"
-                      >
-                        <span aria-hidden="true">${item.emoji}</span>
-                        <span>${item.text}</span>
-                      </button>
-                    `,
-                  )
-                  .join('')}
-                <button id="toggle-demo" class="toggle-chip text-xs">Dados de demonstração</button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section class="neon-card flex flex-col gap-4 px-6 py-6">
+      <section class="neon-card">
+        <div class="flex flex-col gap-6 rounded-[1.05rem] bg-surface p-6 shadow-[0_24px_60px_rgba(8,5,24,0.45)]">
           <div
             id="chat-log"
-            class="glass-panel flex max-h-[360px] flex-col gap-3 overflow-y-auto px-4 py-4 text-sm text-text"
+            class="flex max-h-[420px] flex-col gap-4 overflow-y-auto rounded-3xl border border-border bg-black/20 px-5 py-6 text-sm text-text shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
             data-last-message="${lastMessageId}"
             data-has-messages="${messages.length > 0}"
           >
             ${
               messages.length
                 ? messages.map((entry) => renderChatBubble(entry)).join('')
-                : '<p class="text-text-muted">Nenhuma mensagem ainda. Envie algo para começar.</p>'
+                : '<p class="text-center text-sm text-text-muted">Nenhuma mensagem ainda. Envie algo para começar.</p>'
             }
           </div>
-          <div class="flex flex-col gap-3">
-            <div class="flex flex-wrap gap-2 text-xs">
-              ${['Quais produtos vocês oferecem?', 'Qual o horário de atendimento?', 'Existe suporte humano?']
-                  .map((suggestion) => `
-                    <button class="toggle-chip text-xs" data-suggestion="${suggestion}">
-                      ${suggestion}
+
+          <div class="flex flex-col gap-4">
+            <div class="flex flex-wrap justify-center gap-2">
+              ${suggestions
+                .map(
+                  (item) => `
+                    <button
+                      class="chat-suggestion"
+                      data-suggestion="${item.text}"
+                      type="button"
+                    >
+                      <span aria-hidden="true">${item.emoji}</span>
+                      <span>${item.text}</span>
                     </button>
-                  `)
-                  .join('')}
+                  `,
+                )
+                .join('')}
             </div>
+
             <form id="chat-form" class="flex flex-col gap-3 sm:flex-row">
               <input
                 id="chat-input"
@@ -515,7 +466,7 @@ const renderTestDrive = (state) => {
               </button>
             </form>
           </div>
-        </section>
+        </div>
       </section>
     </section>
   `;
