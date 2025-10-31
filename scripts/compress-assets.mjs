@@ -46,7 +46,7 @@ const compressFile = async (filePath) => {
   await mkdir(dirname(brotliTarget), { recursive: true });
   await writeFile(brotliTarget, brotliBuffer);
 
-  console.log('[OMR:BUILD] compressed', relativePath);
+  console.log('[OMR:BUILD] arquivo comprimido', relativePath);
 };
 
 const run = async () => {
@@ -57,6 +57,6 @@ const run = async () => {
 };
 
 run().catch((error) => {
-  console.error('[OMR:BUILD] compression failed', error);
+  console.error('[OMR:BUILD] falha na compressão', error);
   process.exitCode = 1;
 });
